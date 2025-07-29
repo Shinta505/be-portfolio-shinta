@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - Portfolio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #f8f9fa;
+            --text-color: #343a40;
+            --primary-color: #007bff;
+            --card-bg: #ffffff;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.05);
+            --code-bg: #e9ecef;
+            --code-text: #212529;
+            --tag-get: #007bff;
+            --tag-post: #28a745;
+            --tag-put: #fd7e14;
+            --tag-delete: #dc3545;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: #6c757d;
+        }
+
+        .base-url {
+            background-color: var(--code-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .base-url code {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .api-section {
+            background: var(--card-bg);
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .api-header {
+            padding: 1rem 1.5rem;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .api-header:hover {
+            background-color: #e9ecef;
+        }
+
+        .api-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .api-header .toggle-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .api-section.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
+        .api-content {
+            padding: 1.5rem;
+            display: grid;
+            gap: 1.5rem;
+            transition: all 0.3s ease-in-out;
+            max-height: 10000px;
+            /* Adjusted for more content */
+        }
+
+        .api-section.collapsed .api-content {
+            padding-top: 0;
+            padding-bottom: 0;
+            max-height: 0;
+            overflow: hidden;
+        }
+
+        .api-endpoint {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 6px var(--shadow-color);
+        }
+
+        .endpoint-summary {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .endpoint-method {
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 5px;
+            color: #fff;
+            margin-right: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+            min-width: 70px;
+        }
+
+        .endpoint-method.GET {
+            background-color: var(--tag-get);
+        }
+
+        .endpoint-method.POST {
+            background-color: var(--tag-post);
+        }
+
+        .endpoint-method.PUT {
+            background-color: var(--tag-put);
+        }
+
+        .endpoint-method.DELETE {
+            background-color: var(--tag-delete);
+        }
+
+        .endpoint-path {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .endpoint-description {
+            flex-grow: 1;
+            text-align: right;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .endpoint-details {
+            display: none;
+            padding: 1rem;
+            background-color: #fff;
+        }
+
+        .endpoint-details h4 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.25rem;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1rem;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.85rem;
+        }
+
+        code {
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .endpoint-summary {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .endpoint-method {
+                margin-bottom: 0.5rem;
+            }
+
+            .endpoint-description {
+                text-align: left;
+                margin-top: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Portfolio API</h1>
+            <p>Dokumentasi Lengkap untuk Mengelola Portfolio, Skill, Pengalaman, dan Testimoni</p>
+        </header>
+
+        <div class="base-url">
+            <strong>Base URL:</strong> <code>/api</code>
+        </div>
+
+        <div class="api-section">
+            <div class="api-header">
+                <h2>Authentication API</h2>
+                <div class="toggle-icon">▾</div>
+            </div>
+            <div class="api-content">
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method POST">POST</span>
+                        <span class="endpoint-path">/login</span>
+                        <span class="endpoint-description">Login sebagai Admin</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "username": "your_admin_username",
+    "password": "your_admin_password"
+}</code></pre>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{
+    "success": true,
+    "message": "Login berhasil!"
+}</code></pre>
+                        <h4>Contoh Response Error (401 Unauthorized)</h4>
+                        <pre><code>{
+    "success": false,
+    "message": "Username atau password salah."
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <div class="api-header">
+                <h2>Portfolio API</h2>
+                <div class="toggle-icon">▾</div>
+            </div>
+            <div class="api-content">
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/portfolio</span>
+                        <span class="endpoint-description">Mendapatkan semua data portfolio</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Deskripsi</h4>
+                        <p>Mengambil daftar semua portfolio yang tersimpan.</p>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>[
+    {
+        "id_portfolio": 1,
+        "judul_portfolio": "Website Keren",
+        "deskripsi_portfolio": "Deskripsi singkat tentang proyek portfolio.",
+        "gambar_portfolio": "url/ke/gambar.jpg",
+        "link_portfolio": "https://proyek-keren.com",
+        "link_github": "https://github.com/user/proyek-keren"
+    }
+]</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/portfolio/:id_portfolio</span>
+                        <span class="endpoint-description">Mendapatkan portfolio berdasarkan ID</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Deskripsi</h4>
+                        <p>Mengambil detail portfolio spesifik berdasarkan ID.</p>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{
+    "id_portfolio": 1,
+    "judul_portfolio": "Website Keren",
+    "deskripsi_portfolio": "Deskripsi singkat tentang proyek portfolio.",
+    "gambar_portfolio": "url/ke/gambar.jpg",
+    "link_portfolio": "https://proyek-keren.com",
+    "link_github": "https://github.com/user/proyek-keren"
+}</code></pre>
+                        <h4>Contoh Response Error (404 Not Found)</h4>
+                        <pre><code>{ "message": "Portfolio tidak ditemukan" }</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method POST">POST</span>
+                        <span class="endpoint-path">/portfolio</span>
+                        <span class="endpoint-description">Membuat portfolio baru</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body (multipart/form-data)</h4>
+                        <p>Kirim data sebagai form-data, termasuk file gambar.</p>
+                        <pre><code>
+- judul_portfolio (text)
+- deskripsi_portfolio (text)
+- link_portfolio (text)
+- link_github (text)
+- gambar_portfolio (file)
+</code></pre>
+                        <h4>Contoh Response Sukses (201 Created)</h4>
+                        <pre><code>{ "message": "Portfolio berhasil dibuat" }</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method PUT">PUT</span>
+                        <span class="endpoint-path">/portfolio/:id_portfolio</span>
+                        <span class="endpoint-description">Memperbarui data portfolio</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body (multipart/form-data)</h4>
+                        <p>Kirim hanya field yang ingin diperbarui. Anda bisa menyertakan file gambar baru jika ingin
+                            menggantinya.</p>
+                        <pre><code>
+- judul_portfolio (text, opsional)
+- deskripsi_portfolio (text, opsional)
+- gambar_portfolio (file, opsional)
+</code></pre>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Portfolio berhasil diperbarui" }</code></pre>
+                    </div>
+                </div>
+
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method DELETE">DELETE</span>
+                        <span class="endpoint-path">/portfolio/:id_portfolio</span>
+                        <span class="endpoint-description">Menghapus portfolio</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Portfolio berhasil dihapus" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <div class="api-header">
+                <h2>Skill API</h2>
+                <div class="toggle-icon">▾</div>
+            </div>
+            <div class="api-content">
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/skill</span>
+                        <span class="endpoint-description">Mendapatkan semua data skill</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Deskripsi</h4>
+                        <p>Mengambil daftar semua skill yang dikuasai.</p>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>[
+    {
+        "id_skill": 1,
+        "nama_skill": "JavaScript",
+        "tingkat_keahlian": "Mahir"
+    }
+]</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/skill/:id_skill</span>
+                        <span class="endpoint-description">Mendapatkan skill berdasarkan ID</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{
+    "id_skill": 1,
+    "nama_skill": "JavaScript",
+    "tingkat_keahlian": "Mahir"
+}</code></pre>
+                        <h4>Contoh Response Error (404 Not Found)</h4>
+                        <pre><code>{ "message": "Skill tidak ditemukan" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method POST">POST</span>
+                        <span class="endpoint-path">/skill</span>
+                        <span class="endpoint-description">Membuat skill baru</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "nama_skill": "Python",
+    "tingkat_keahlian": "Menengah"
+}</code></pre>
+                        <h4>Contoh Response Sukses (201 Created)</h4>
+                        <pre><code>{ "message": "Skill berhasil dibuat" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method PUT">PUT</span>
+                        <span class="endpoint-path">/skill/:id_skill</span>
+                        <span class="endpoint-description">Memperbarui data skill</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "tingkat_keahlian": "Sangat Mahir"
+}</code></pre>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Skill berhasil diperbarui" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method DELETE">DELETE</span>
+                        <span class="endpoint-path">/skill/:id_skill</span>
+                        <span class="endpoint-description">Menghapus skill</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Skill berhasil dihapus" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <div class="api-header">
+                <h2>Experience API</h2>
+                <div class="toggle-icon">▾</div>
+            </div>
+            <div class="api-content">
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/experience</span>
+                        <span class="endpoint-description">Mendapatkan semua data pengalaman</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Deskripsi</h4>
+                        <p>Mengambil daftar semua pengalaman kerja.</p>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>[
+    {
+        "id_experience": 1,
+        "bidang_pekerjaan": "Software Engineer",
+        "nama_perusahaan": "Tech Corp",
+        "tahun_masuk": "2020",
+        "tahun_keluar": "2022",
+        "alamat_perusahaan": "Jalan Teknologi No. 1",
+        "deskripsi_experience": "Mengembangkan aplikasi web..."
+    }
+]</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/experience/:id_experience</span>
+                        <span class="endpoint-description">Mendapatkan pengalaman by ID</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{
+    "id_experience": 1,
+    "bidang_pekerjaan": "Software Engineer",
+    "nama_perusahaan": "Tech Corp",
+    "tahun_masuk": "2020",
+    "tahun_keluar": "2022",
+    "alamat_perusahaan": "Jalan Teknologi No. 1",
+    "deskripsi_experience": "Mengembangkan aplikasi web..."
+}</code></pre>
+                        <h4>Contoh Response Error (404 Not Found)</h4>
+                        <pre><code>{ "message": "Experience tidak ditemukan" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method POST">POST</span>
+                        <span class="endpoint-path">/experience</span>
+                        <span class="endpoint-description">Membuat pengalaman baru</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "bidang_pekerjaan": "Frontend Developer",
+    "nama_perusahaan": "Creative Inc.",
+    "tahun_masuk": "2022",
+    "tahun_keluar": "Sekarang",
+    "alamat_perusahaan": "Jalan Inovasi No. 2",
+    "deskripsi_experience": "Merancang antarmuka pengguna..."
+}</code></pre>
+                        <h4>Contoh Response Sukses (201 Created)</h4>
+                        <pre><code>{ "message": "Experience berhasil dibuat" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method PUT">PUT</span>
+                        <span class="endpoint-path">/experience/:id_experience</span>
+                        <span class="endpoint-description">Memperbarui data pengalaman</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "tahun_keluar": "2023",
+    "deskripsi_experience": "Update deskripsi pekerjaan."
+}</code></pre>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Experience berhasil diperbarui" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method DELETE">DELETE</span>
+                        <span class="endpoint-path">/experience/:id_experience</span>
+                        <span class="endpoint-description">Menghapus pengalaman</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Experience berhasil dihapus" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <div class="api-header">
+                <h2>Testimoni API</h2>
+                <div class="toggle-icon">▾</div>
+            </div>
+            <div class="api-content">
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/testimoni</span>
+                        <span class="endpoint-description">Mendapatkan semua testimoni</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Deskripsi</h4>
+                        <p>Mengambil daftar semua testimoni yang ada.</p>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>[
+    {
+        "id_testimoni": 1,
+        "nama_pengirim": "Jane Doe",
+        "isi_testimoni": "Kerja sama yang luar biasa!"
+    }
+]</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method GET">GET</span>
+                        <span class="endpoint-path">/testimoni/:id_testimoni</span>
+                        <span class="endpoint-description">Mendapatkan testimoni by ID</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{
+    "id_testimoni": 1,
+    "nama_pengirim": "Jane Doe",
+    "isi_testimoni": "Kerja sama yang luar biasa!"
+}</code></pre>
+                        <h4>Contoh Response Error (404 Not Found)</h4>
+                        <pre><code>{ "message": "Testimoni tidak ditemukan" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method POST">POST</span>
+                        <span class="endpoint-path">/testimoni</span>
+                        <span class="endpoint-description">Membuat testimoni baru</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "nama_pengirim": "John Smith",
+    "isi_testimoni": "Sangat profesional dan hasilnya memuaskan."
+}</code></pre>
+                        <h4>Contoh Response Sukses (201 Created)</h4>
+                        <pre><code>{ "message": "Testimoni berhasil dibuat" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method PUT">PUT</span>
+                        <span class="endpoint-path">/testimoni/:id_testimoni</span>
+                        <span class="endpoint-description">Memperbarui data testimoni</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Request Body</h4>
+                        <pre><code>{
+    "isi_testimoni": "Update testimoni: Sangat direkomendasikan!"
+}</code></pre>
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Testimoni berhasil diperbarui" }</code></pre>
+                    </div>
+                </div>
+                <div class="api-endpoint">
+                    <div class="endpoint-summary">
+                        <span class="endpoint-method DELETE">DELETE</span>
+                        <span class="endpoint-path">/testimoni/:id_testimoni</span>
+                        <span class="endpoint-description">Menghapus testimoni</span>
+                    </div>
+                    <div class="endpoint-details">
+                        <h4>Contoh Response Sukses (200 OK)</h4>
+                        <pre><code>{ "message": "Testimoni berhasil dihapus" }</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const apiSections = document.querySelectorAll('.api-section');
+            const apiEndpoints = document.querySelectorAll('.api-endpoint .endpoint-summary');
+
+            apiSections.forEach(section => {
+                const header = section.querySelector('.api-header');
+                header.addEventListener('click', () => {
+                    section.classList.toggle('collapsed');
+                });
+                // Collapse all sections by default
+                section.classList.add('collapsed');
+            });
+
+            apiEndpoints.forEach(endpoint => {
+                endpoint.addEventListener('click', () => {
+                    const details = endpoint.nextElementSibling;
+                    if (details.style.display === 'block') {
+                        details.style.display = 'none';
+                    } else {
+                        details.style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+
+</body>
+
+</html>

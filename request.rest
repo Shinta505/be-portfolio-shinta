@@ -1,0 +1,172 @@
+### ✅ Login Admin
+POST http://localhost:5000/api/login
+Content-Type: application/json
+
+{
+  "username": "123220074",
+  "password": "ShintaLucu12"
+}
+
+###
+
+### ✅ Get semua portfolio
+GET http://localhost:5000/api/portfolio
+Content-Type: application/json
+
+###
+
+### ✅ Get portfolio by ID
+GET http://localhost:5000/api/portfolio/1
+Content-Type: application/json
+
+###
+
+### ✅ Tambah portfolio baru
+POST http://localhost:5000/api/portfolio
+Content-Type: application/json
+
+{
+  "judul_portfolio": "Website Portofolio",
+  "deskripsi_portfolio": "Website portofolio pribadi yang dibuat dengan React dan Node.js.",
+  "gambar_portfolio": "url/gambar_portfolio.jpg",
+  "link_portfolio": "https://contoh.com",
+  "link_github": "https://github.com/contoh"
+}
+
+###
+
+### ✅ Update portfolio (by ID)
+PUT http://localhost:5000/api/portfolio/1
+Content-Type: application/json
+
+{
+  "judul_portfolio": "Update Website Portofolio",
+  "deskripsi_portfolio": "Update deskripsi portofolio."
+}
+
+###
+
+### ✅ Hapus portfolio (by ID)
+DELETE http://localhost:5000/api/portfolio/1
+Content-Type: application/json
+
+###
+
+### ✅ Get semua skill
+GET http://localhost:5000/api/skill
+Content-Type: application/json
+
+###
+
+### ✅ Get skill by ID
+GET http://localhost:5000/api/skill/1
+Content-Type: application/json
+
+###
+
+### ✅ Tambah skill baru
+POST http://localhost:5000/api/skill
+Content-Type: application/json
+
+{
+  "nama_skill": "JavaScript",
+  "tingkat_keahlian": "Menengah"
+}
+
+###
+
+### ✅ Update skill (by ID)
+PUT http://localhost:5000/api/skill/1
+Content-Type: application/json
+
+{
+  "tingkat_keahlian": "Mahir"
+}
+
+###
+
+### ✅ Hapus skill (by ID)
+DELETE http://localhost:5000/api/skill/1
+Content-Type: application/json
+
+###
+
+### ✅ Get semua pengalaman
+GET http://localhost:5000/api/experience
+Content-Type: application/json
+
+###
+
+### ✅ Get pengalaman by ID
+GET http://localhost:5000/api/experience/1
+Content-Type: application/json
+
+###
+
+### ✅ Tambah pengalaman baru
+POST http://localhost:5000/api/experience
+Content-Type: application/json
+
+{
+  "bidang_pekerjaan": "Software Engineer",
+  "nama_perusahaan": "Contoh Corp",
+  "tahun_masuk": "2020",
+  "tahun_keluar": "2022",
+  "alamat_perusahaan": "Jalan Contoh No. 123",
+  "deskripsi_experience": "Deskripsi pengalaman kerja."
+}
+
+###
+
+### ✅ Update pengalaman (by ID)
+PUT http://localhost:5000/api/experience/1
+Content-Type: application/json
+
+{
+  "tahun_keluar": "2023"
+}
+
+###
+
+### ✅ Hapus pengalaman (by ID)
+DELETE http://localhost:5000/api/experience/1
+Content-Type: application/json
+
+###
+
+### ✅ Get semua testimoni
+GET http://localhost:5000/api/testimoni
+Content-Type: application/json
+
+###
+
+### ✅ Get testimoni by ID
+GET http://localhost:5000/api/testimoni/1
+Content-Type: application/json
+
+###
+
+### ✅ Tambah testimoni baru
+POST http://localhost:5000/api/testimoni
+Content-Type: application/json
+
+{
+  "nama_pengirim": "John Doe",
+  "isi_testimoni": "Testimoni yang luar biasa!"
+}
+
+###
+
+### ✅ Update testimoni (by ID)
+PUT http://localhost:5000/api/testimoni/1
+Content-Type: application/json
+
+{
+  "isi_testimoni": "Update testimoni yang luar biasa!"
+}
+
+###
+
+### ✅ Hapus testimoni (by ID)
+DELETE http://localhost:5000/api/testimoni/1
+Content-Type: application/json
