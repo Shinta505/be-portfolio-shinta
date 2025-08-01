@@ -1,4 +1,4 @@
-import { DataTypes, Sequelize } from "sequelize";
+import { DataTypes } from "sequelize";
 import dbContext from "../config/Database.js";
 
 const Skill = dbContext.define(
@@ -11,12 +11,16 @@ const Skill = dbContext.define(
     nama_skill: {
         type: DataTypes.STRING,
         allowNull: false,
-    }, 
-    tingkat_keahlian: {
-        type: DataTypes.STRING,
-        allowNull: false,
     },
-    }, {
+    persentase_keahlian: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        validate: {
+            min: 0,
+            max: 100
+        }
+    },
+}, {
     tableName: "skill",
     timestamps: false,
     freezeTableName: true,
@@ -27,8 +31,7 @@ export default Skill;
 (async () => {
     try {
         await dbContext.authenticate();
-        console.log("Database connection has been established successfully.");
-        await Skill.sync();
+        await Skill.sync({ alter: true });
         console.log("Skill table has been synchronized successfully.");
     } catch (error) {
         console.error("Unable to connect to the database:", error);
