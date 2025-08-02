@@ -1,11 +1,12 @@
 import express from 'express';
+import multer from 'multer';
+const upload = multer({ storage: multer.memoryStorage() });
 import {
     getAllPortfolios,
     getPortfolioById,
     createPortfolio,
     updatePortfolio,
     deletePortfolio,
-    upload,
 } from '../controllers/PortfolioController.js';
 
 const router = express.Router();
