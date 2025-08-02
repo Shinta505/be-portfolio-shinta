@@ -36,22 +36,29 @@ async function createPortfolio(req, res) {
             return res.status(400).json({ msg: "Gambar portfolio harus disertakan" });
         }
 
-        // upload gambar ke Vercel Blob
+        // --- Logging Langkah 1 ---
+        console.log("Mencoba mengunggah gambar ke Vercel Blob...");
         const blob = await put(`portfolio/${Date.now()}_${req.file.originalname}`, req.file.buffer, {
             access: 'public',
         });
+        // --- Logging Langkah 2 ---
+        console.log("Gambar berhasil diunggah:", blob.url);
 
-        // Simpan data portfolio ke database
         const inputResult = {
             ...req.body,
             gambar_portfolio: blob.url,
         };
 
+        // --- Logging Langkah 3 ---
+        console.log("Mencoba menyimpan data ke database...");
         await Portfolio.create(inputResult);
+        console.log("Data berhasil disimpan ke database.");
+
         res.status(201).json({ msg: "Portfolio berhasil ditambahkan" });
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ msg: "Terjadi kesalahan server" });
+        // --- Logging Error Detail ---
+        console.error("Terjadi kesalahan di createPortfolio:", error);
+        res.status(500).json({ msg: "Terjadi kesalahan internal pada server.", error: error.message });
     }
 }
 
@@ -69,16 +76,19 @@ async function updatePortfolio(req, res) {
         let gambar_portfolio = portfolio.gambar_portfolio;
 
         if (req.file) {
-            // Hapus gambar lama dari Vercel Blob
+            console.log("File baru terdeteksi, memulai proses pembaruan gambar...");
             if (gambar_portfolio) {
+                console.log("Menghapus gambar lama:", gambar_portfolio);
                 await del(gambar_portfolio);
+                console.log("Gambar lama berhasil dihapus.");
             }
 
-            // Upload gambar baru ke Vercel Blob
+            console.log("Mengunggah gambar baru...");
             const blob = await put(`portfolio/${Date.now()}_${req.file.originalname}`, req.file.buffer, {
                 access: 'public',
             });
             gambar_portfolio = blob.url;
+            console.log("Gambar baru berhasil diunggah:", gambar_portfolio);
         }
 
         const updatedData = {
@@ -86,14 +96,17 @@ async function updatePortfolio(req, res) {
             gambar_portfolio: gambar_portfolio,
         };
 
+        console.log("Memperbarui data di database...");
         await Portfolio.update(updatedData, {
             where: { id_portfolio: req.params.id_portfolio }
         });
+        console.log("Data berhasil diperbarui.");
 
         res.status(200).json({ msg: "Portfolio berhasil diperbarui" });
     } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ msg: "Terjadi kesalahan server" });
+        // --- Logging Error Detail ---
+        console.error("Terjadi kesalahan di updatePortfolio:", error);
+        res.status(500).json({ msg: "Terjadi kesalahan internal pada server.", error: error.message });
     }
 }
 
