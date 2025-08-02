@@ -2,10 +2,6 @@ import Portfolio from "../models/PortfolioModel.js";
 import { put, del } from "@vercel/blob";
 import multer from "multer";
 
-// Konfigurasi multer untuk penyimpanan file
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
-
 // GET all portfolios
 async function getAllPortfolios(req, res) {
     try {
@@ -134,5 +130,4 @@ export {
     createPortfolio,
     updatePortfolio,
     deletePortfolio,
-    upload
 }
