@@ -18,7 +18,7 @@ const Portfolio = dbContext.define(
     },
     gambar_portfolio: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     link_portfolio: {
         type: DataTypes.STRING,
