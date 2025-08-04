@@ -32,31 +32,30 @@ async function getPortfolioById(req, res) {
 // CREATE
 async function createPortfolio(req, res) {
     try {
-        if (!req.file) {
-            return res.status(400).json({ msg: "Gambar portfolio harus disertakan" });
+        let gambarUrl = null; // Variabel untuk menampung URL gambar, defaultnya null
+
+        // Cek jika ada file yang diunggah
+        if (req.file) {
+            console.log("Mencoba mengunggah gambar ke Vercel Blob...");
+            const blob = await put(`portfolio/${Date.now()}_${req.file.originalname}`, req.file.buffer, {
+                access: 'public',
+            });
+            gambarUrl = blob.url; // Jika berhasil, simpan URL-nya
+            console.log("Gambar berhasil diunggah:", gambarUrl);
         }
 
-        // --- Logging Langkah 1 ---
-        console.log("Mencoba mengunggah gambar ke Vercel Blob...");
-        const blob = await put(`portfolio/${Date.now()}_${req.file.originalname}`, req.file.buffer, {
-            access: 'public',
-        });
-        // --- Logging Langkah 2 ---
-        console.log("Gambar berhasil diunggah:", blob.url);
-
+        // Siapkan data untuk disimpan ke database
         const inputResult = {
             ...req.body,
-            gambar_portfolio: blob.url,
+            gambar_portfolio: gambarUrl, // Gunakan variabel gambarUrl
         };
 
-        // --- Logging Langkah 3 ---
         console.log("Mencoba menyimpan data ke database...");
         await Portfolio.create(inputResult);
         console.log("Data berhasil disimpan ke database.");
 
         res.status(201).json({ msg: "Portfolio berhasil ditambahkan" });
     } catch (error) {
-        // --- Logging Error Detail ---
         console.error("Terjadi kesalahan di createPortfolio:", error);
         res.status(500).json({ msg: "Terjadi kesalahan internal pada server.", error: error.message });
     }
