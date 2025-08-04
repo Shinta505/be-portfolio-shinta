@@ -45,7 +45,7 @@ export default Portfolio;
     try {
         await dbContext.authenticate();
         console.log("Database connection has been established successfully.");
-        await Portfolio.sync();
+        await Portfolio.sync({ alter: true });
         console.log("Portfolio table has been synchronized successfully.");
     } catch (error) {
         console.error("Unable to connect to the database:", error);
