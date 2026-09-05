@@ -1,0 +1,44 @@
+Karena konfigurasi database telah selesai, pengembangan arsitektur backend sebaiknya mengikuti prinsip hierarki dependensi, dimulai dari lapisan akses data hingga titik masuk aplikasi (entry point).
+
+1. Models
+Representasi struktur data.
+Definisikan skema database dan relasi antar entitas (misalnya menggunakan Object-Relational Mapping seperti Sequelize). Lapisan ini wajib diselesaikan pertama karena logika pemrosesan data akan gagal berfungsi tanpa definisi skema yang jelas.
+
+2. Controllers
+Logika pemrosesan bisnis
+Implementasikan fungsi-fungsi operasional seperti manipulasi data (CRUD). Modul ini akan mengimpor lapisan Models untuk berinteraksi langsung dengan database, memproses permintaan, dan memformat respons.
+
+3. Middleware
+Fungsi validasi dan intersepsi
+Kembangkan fungsi perantara untuk menangani autentikasi (seperti verifikasi token JWT), otorisasi hak akses, atau penanganan error global. Modul ini disiapkan sebelum konfigurasi routing agar rute yang memerlukan proteksi dapat langsung diintegrasikan.
+
+4. Routes
+Definisi endpoint API
+Petakan endpoint aplikasi ke dalam fungsi-fungsi yang telah dibuat di Controllers. Jika sebuah endpoint bersifat privat atau membutuhkan validasi khusus, sisipkan Middleware yang relevan di rute tersebut.
+
+5. index.js
+Inisialisasi server
+Konfigurasikan instansiasi Express.js, pasang middleware global (seperti CORS dan JSON parser), lakukan sinkronisasi koneksi database, impor seluruh modul Routes, dan jalankan peladen (server) pada porta yang ditentukan.
+
+
+
+
+Berdasarkan struktur file yang kamu punya, urutan pengerjaan fitur per modul (dari Models sampai Routes) adalah sebagai berikut:
+
+1. Auth (UserModel)
+Selesaikan bagian autentikasi dan User terlebih dahulu karena entitas lain seperti Article atau Project biasanya memerlukan relasi ke tabel User (misalnya sebagai author_id atau user_id). Buat UserModel.js, lalu AuthController.js, pasang middleware pelindung di AuthMiddleware.js jika diperlukan, dan tutup dengan AuthRoute.js.
+
+2. Profile
+Modul Profile biasanya berelasi langsung dengan User (hubungan one-to-one). Kerjakan ProfileModel.js, ProfileController.js, hingga ProfileRoute.js.
+
+3. Project
+Modul Project umumnya berdiri sendiri atau hanya membutuhkan relasi ke User. Lanjutkan dengan ProjectModel.js, ProjectController.js, dan ProjectRoute.js.
+
+4. Article
+Sama seperti Project, modul ini biasanya independen atau terikat ke tabel User. Kerjakan ArticleModel.js, ArticleController.js, dan ArticleRoute.js.
+
+5. Contact (Message)
+Modul ini biasanya berfungsi untuk menampung pesan masuk dari pengunjung (seperti tabel MessageModel.js). Karena sifatnya yang independen dan tidak terikat dengan entitas kompleks lain, posisikan modul ini di urutan berikutnya. Buat MessageModel.js, ContactController.js, dan ContactRoute.js.
+
+6. Setting / Konfigurasi Tambahan
+Jika ada model pendukung lain seperti SettingModel.js, selesaikan di tahap akhir sebelum semuanya dirangkum ke dalam index.js.

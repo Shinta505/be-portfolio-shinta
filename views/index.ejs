@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio & CMS API Documentation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-indigo-600 selection:text-white">
+
+    <!-- Container Utama -->
+    <div class="max-w-4xl mx-auto w-full px-4 py-12 flex-grow">
+
+        <!-- Header Judul -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-blue-600 mb-2 tracking-tight">
+                Portfolio & CMS API
+            </h1>
+            <p class="text-slate-500 text-sm sm:text-base">
+                Dokumentasi Lengkap untuk Mengelola Autentikasi, Profil, Galeri Proyek, Artikel, dan Pesan Masuk
+            </p>
+        </div>
+
+        <!-- Base URL Card -->
+        <div class="bg-slate-100 border border-slate-200 rounded-xl p-4 mb-8 shadow-sm text-center">
+            <span class="text-xs sm:text-sm font-semibold text-slate-600">
+                Base URL: <code class="text-blue-600 font-mono bg-blue-50 px-2 py-1 rounded border border-blue-100">/api</code>
+            </span>
+        </div>
+
+        <!-- Daftar Menu Accordion / Endpoint API -->
+        <div class="space-y-4">
+
+            <!-- 1. AUTH API -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition duration-200">
+                <button onclick="toggleAccordion('auth-content')" class="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none">
+                    <span>Authentication API</span>
+                    <svg id="auth-icon" class="w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="auth-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-green-600 text-white text-xs font-bold rounded">POST</span>
+                            <code class="text-sm font-mono text-slate-700">/login</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Login admin dan generate JWT token</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/me</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Cek profil admin yang sedang login (Protected)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-rose-600 text-white text-xs font-bold rounded">DELETE</span>
+                            <code class="text-sm font-mono text-slate-700">/logout</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Akhiri sesi login admin</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PROFILE API -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition duration-200">
+                <button onclick="toggleAccordion('profile-content')" class="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none">
+                    <span>Profile API (Tentang Saya)</span>
+                    <svg id="profile-icon" class="w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="profile-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/profile</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Ambil data profil portofolio (Publik)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-amber-500 text-white text-xs font-bold rounded">PUT</span>
+                            <code class="text-sm font-mono text-slate-700">/profile</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Perbarui data profil (Protected - Admin)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PROJECT API -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition duration-200">
+                <button onclick="toggleAccordion('project-content')" class="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none">
+                    <span>Project API (Galeri Karya)</span>
+                    <svg id="project-icon" class="w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="project-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/projects</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Dapatkan semua daftar proyek / filter kategori</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/projects/:uuid</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Lihat detail proyek berdasarkan UUID</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-green-600 text-white text-xs font-bold rounded">POST</span>
+                            <code class="text-sm font-mono text-slate-700">/projects</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Tambah proyek baru (Protected - Admin)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-indigo-600 text-white text-xs font-bold rounded">PATCH</span>
+                            <code class="text-sm font-mono text-slate-700">/projects/:uuid</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Perbarui data proyek (Protected - Admin)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-rose-600 text-white text-xs font-bold rounded">DELETE</span>
+                            <code class="text-sm font-mono text-slate-700">/projects/:uuid</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Hapus proyek (Protected - Admin)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ARTICLE API -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition duration-200">
+                <button onclick="toggleAccordion('article-content')" class="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none">
+                    <span>Article API (Blog & Wawasan)</span>
+                    <svg id="article-icon" class="w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="article-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/articles</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Ambil seluruh daftar artikel</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/articles/slug/:slug</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Baca artikel berdasarkan slug URL</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-green-600 text-white text-xs font-bold rounded">POST</span>
+                            <code class="text-sm font-mono text-slate-700">/articles</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Buat artikel baru (Protected - Admin)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-indigo-600 text-white text-xs font-bold rounded">PATCH</span>
+                            <code class="text-sm font-mono text-slate-700">/articles/:id</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Edit artikel (Protected - Admin)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-rose-600 text-white text-xs font-bold rounded">DELETE</span>
+                            <code class="text-sm font-mono text-slate-700">/articles/:id</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Hapus artikel (Protected - Admin)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. CONTACT API -->
+            <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden transition duration-200">
+                <button onclick="toggleAccordion('contact-content')" class="w-full px-6 py-4 flex justify-between items-center text-left font-semibold text-slate-700 hover:bg-slate-50 focus:outline-none">
+                    <span>Contact API (Pesan Masuk)</span>
+                    <svg id="contact-icon" class="w-5 h-5 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div id="contact-content" class="hidden px-6 pb-6 pt-2 border-t border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-green-600 text-white text-xs font-bold rounded">POST</span>
+                            <code class="text-sm font-mono text-slate-700">/contact</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Kirim pesan dari form kontak publik</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-blue-600 text-white text-xs font-bold rounded">GET</span>
+                            <code class="text-sm font-mono text-slate-700">/contact</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Lihat semua daftar pesan masuk (Protected)</span>
+                    </div>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100 gap-2">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-1 bg-rose-600 text-white text-xs font-bold rounded">DELETE</span>
+                            <code class="text-sm font-mono text-slate-700">/contact/:id</code>
+                        </div>
+                        <span class="text-xs text-slate-500">Hapus pesan berdasarkan ID (Protected)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-4xl mx-auto w-full px-4 py-6 border-t border-slate-200 text-center text-xs text-slate-400">
+        <p>&copy; 2026 Portfolio Backend System. Running on Supabase & Vercel.</p>
+    </footer>
+
+    <!-- Script Accordion Interactive -->
+    <script>
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const icon = document.getElementById(id.replace('-content', '-icon'));
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+1. Models (Struktur Database)
+Fungsi: Bertindak sebagai "cetakan" atau "lemari arsip" yang mendefinisikan bentuk data yang akan disimpan di dalam database (misalnya menggunakan Sequelize/PostgreSQL).
+ `ProjectModel.js`: Menyimpan tabel data Galeri Karya, termasuk judul, tautan gambar, deskripsi, dan kategorinya (UI/UX, Web Dev, Mobile, dll).
+ `ProfileModel.js`: Menyimpan informasi Halaman Tentang Saya, riwayat pendidikan, dan tautan Integrasi Media Sosial.
+ `ArticleModel.js`: Menyimpan teks konten, judul, serta tanggal publikasi untuk fitur Blog atau Artikel.
+ `MessageModel.js`: Menyimpan riwayat pesan masuk dari pengunjung melalui Formulir Kontak.
+ `UserModel.js`: Menyimpan data kredensial (username, password, dan level hak akses) untuk sistem login admin (CMS) dan Fitur Kolaborasi tim.
+ `SettingModels.js`: Menyimpan data pengaturan web yang bisa diubah, seperti konfigurasi Optimasi SEO (teks meta), Kustomisasi Desain (kode warna/tema), dan pengaturan Dukungan Multi-Bahasa.
+
+2. Controllers (Pusat Logika Aplikasi)
+Fungsi: Bertindak sebagai "otak" atau "manajer" yang memproses permintaan pengunjung, mengambil data dari Models, dan memberikan respon akhir.
+ `ProjectController.js`: Memproses perintah untuk menambah, menampilkan, mengubah, atau menghapus karya di Galeri.
+ `ProfileController.js`: Mengelola alur pembaruan teks biodata dan tautan sosial media.
+ `ArticleController.js`: Mengatur logika pembuatan tulisan, mode draft, dan publikasi blog.
+ `ContactController.js`: Mengelola pesan yang dikirim lewat form kontak dan mengatur pengiriman notifikasi email otomatis.
+ `AuthController.js`: Memproses pencocokan username dan password untuk masuk ke dasbor CMS (Sistem Manajemen Konten).
+
+3. Routes (Jalur URL)
+Fungsi: Bertindak sebagai "papan petunjuk jalan" yang menghubungkan URL yang diketik pengguna (misalnya `/api/karya`) ke Controller yang tepat.
+ `ProjectRoute.js`: Mendefinisikan jalur endpoint untuk operasi Galeri Karya.
+ `ProfileRoute.js`: Mendefinisikan jalur endpoint untuk Halaman Tentang Saya.
+ `ArticleRoute.js`: Mendefinisikan jalur endpoint untuk mengakses Blog.
+ `ContactRoute.js`: Mendefinisikan jalur endpoint untuk menampung pengiriman Formulir Kontak.
+ `AuthRoute.js`: Mendefinisikan jalur endpoint khusus login admin.
+
+4. Middleware (Lapis Keamanan & Filter)
+Fungsi: Bertindak sebagai "satpam pos penjagaan" yang memeriksa setiap akses sebelum diizinkan masuk ke dalam Controller.
+ `AuthMiddleware.js`: Memastikan perlindungan halaman CMS, di mana hanya pengguna dengan token otentikasi valid yang bisa menambah atau menghapus karya.
+ `UploadMiddleware.js`: Menangani proses unggahan file gambar/video. Di sinilah logika validasi ukuran file dan penyematan watermark otomatis dapat dilakukan untuk Perlindungan Karya Cipta.
+ `RateLimitMiddleware.js`: Membatasi jumlah klik per detik untuk mencegah spam pada Formulir Kontak dan melindungi server dari serangan siber (bagian dari fitur Backup dan Keamanan).

@@ -1,0 +1,147 @@
+@baseUrl = http://localhost:5000/api
+@authToken = {{login.response.body.token}}
+
+### 1. AUTHENTICATION
+
+# Login Admin
+# @name login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+  "username": "ShintaNursobah",
+  "password": "ShintaLucu12"
+}
+
+### Check Current Logged-in Admin Profile (/me)
+GET {{baseUrl}}/me
+Authorization: Bearer {{authToken}}
+
+### Logout (Client-side stateless handling)
+DELETE {{baseUrl}}/logout
+
+
+### 2. PROFILE
+
+# Get Profile (Public)
+GET {{baseUrl}}/profile
+
+### Update Profile (Protected - Admin)
+PUT {{baseUrl}}/profile
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "name": "Shinta Nursobah",
+  "title": "Fullstack Web Developer & UI/UX Designer",
+  "bio": "Deskripsi singkat tentang latar belakang, keahlian, dan minat profesional.",
+  "profile_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrr-GVtYd8OOXIKAahiwohmAr2cVdvULO1bRUmHYJUfA&s.jpg",
+  "education": "[]",
+  "experience": "[]",
+  "social_links": "{\"github\": \"https://github.com/Shinta505\", \"linkedin\": \"https://linkedin.com/in/shinta-nursobah-chairani\", \"instagram\": \"https://instagram.com/by_shntaa\"}"
+}
+
+
+### 3. PROJECTS (Galeri Karya)
+
+# Get All Projects (Public)
+GET {{baseUrl}}/projects
+
+### Get Projects Filtered by Category (Public)
+GET {{baseUrl}}/projects?category=Website Development
+
+### Get Project By UUID (Public)
+# Ganti UUID dengan UUID yang valid
+GET {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
+
+### Create Project (Protected - Admin)
+POST {{baseUrl}}/projects
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "Aplikasi VocabMaster",
+  "category": "Website Development",
+  "description": "Membuat aplikasi belajar bahasa inggris lengkap dengan backend ExpressJS dan database PostgreSQL Supabase.",
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYBUM6kg04UW80B4kCY4_ywUEJw9PD4igEBEHHsWnsYw&s=10.jpg",
+  "projectUrl": "https://github.com/Shinta505/VocabMaster"
+}
+
+### Update Project (Protected - Admin)
+PATCH {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "Aplikasi VocabMaster Update",
+  "category": "Website Development",
+  "description": "Membuat aplikasi belajar bahasa inggris lengkap dengan JavaScript dan ExpressJS",
+  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS51Wl9PwAeHcOB5XjjVmaBVFJ2SWEAKmYBiXIdOxkb_g&s=10.jpg",
+  "projectUrl": "https://github.com/Shinta505/VocabMaster"
+}
+
+### Delete Project (Protected - Admin)
+DELETE {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
+Authorization: Bearer {{authToken}}
+
+
+### 4. ARTICLES (Blog)
+
+# Get All Articles (Public)
+GET {{baseUrl}}/articles
+
+### Get Article By ID / UUID (Public)
+GET {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
+
+### Get Article By Slug (Public)
+GET {{baseUrl}}/articles/slug/belajar-sequelize-dan-supabase
+
+### Create Article (Protected - Admin)
+POST {{baseUrl}}/articles
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "Belajar Sequelize dan Supabase",
+  "content": "Ini adalah isi konten artikel lengkap seputar pengembangan web menggunakan Sequelize dan database PostgreSQL di Supabase.",
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxV4EaRAfd7q6YnsVl2200EU_IWyL1lSqiM1-SPlXPZA&s.jpg",
+  "publishedAt": "2026-09-05T00:00:00.000Z"
+}
+
+### Update Article (Protected - Admin)
+PATCH {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "title": "Belajar Sequelize dan Supabase Update",
+  "content": "Konten artikel yang telah diperbarui secara berkala.",
+  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-joWSyCfvx0fbILZcasyI09tPLQ4qPhg3wGL5VkXDiw&s=10.jpg",
+  "publishedAt": "2026-09-05T00:00:00.000Z"
+}
+
+### Delete Article (Protected - Admin)
+DELETE {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
+Authorization: Bearer {{authToken}}
+
+
+### 5. CONTACT (Pesan Masuk)
+
+# Send Message / Form Contact (Public)
+POST {{baseUrl}}/contact
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "johndoe@example.com",
+  "subject": "Kerjasama Proyek",
+  "message": "Halo, saya tertarik untuk mendiskusikan pembuatan website bersama Anda."
+}
+
+### Get All Messages (Protected - Admin)
+GET {{baseUrl}}/contact
+Authorization: Bearer {{authToken}}
+
+### Delete Message by ID (Protected - Admin)
+DELETE {{baseUrl}}/contact/1
+Authorization: Bearer {{authToken}}
