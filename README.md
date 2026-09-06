@@ -32,31 +32,66 @@ Sistem *backend* ini menyediakan layanan integrasi data dengan rincian fitur seb
 Pengembangan sistem ini memanfaatkan beberapa teknologi utama:
 *   **Lingkungan Eksekusi**: [Node.js](https://nodejs.org/)
 *   **Kerangka Kerja (Framework)**: [Express.js](https://expressjs.com/)
-*   **Manajemen Basis Data**: SQL/NoSQL (Diinisialisasi pada `config/Database.js`)
+*   **Manajemen Basis Data**: SQL/NoSQL (Diinisialisasi pada `config/database.js`)
 *   **Mesin Templat (*Template Engine*)**: EJS (Digunakan untuk halaman statis pada `views/`)
 *   **Pengujian API**: Terlampir pada berkas `request.rest` (Kompatibel dengan ekstensi REST Client)
 *   **Penyebaran (*Deployment*)**: Konfigurasi Vercel tersedia pada `vercel.json`
 
 ---
 
-## 📁 Struktur Direktori
+## 🏗️ Struktur Direktori & Arsitektur (MVC)
 
-Pengorganisasian kode sumber mematuhi standar *clean architecture*:
+Pengorganisasian kode sumber mematuhi standar *clean architecture* berbasis MVC. Berikut adalah rincian peran dari masing-masing lapisan komponen:
 
-```text
-📦 be-portfolio-shinta
- ┣ 📂 config/           # Konfigurasi koneksi basis data (Database.js)
- ┣ 📂 controllers/      # Logika pemrosesan untuk setiap entitas model
- ┣ 📂 middleware/       # Fungsi penengah (Otentikasi, Rate Limit, Upload Berkas)
- ┣ 📂 models/           # Definisi skema basis data (User, Project, Article, dll.)
- ┣ 📂 routes/           # Pemetaan titik akhir (endpoint) HTTP ke Controller
- ┣ 📂 views/            # Antarmuka EJS untuk penanganan galat dan halaman indeks
- ┣ 📜 .env.example      # Templat variabel lingkungan konfigurasi sistem
- ┣ 📜 index.js          # Titik masuk utama (Main Entry Point) aplikasi
- ┣ 📜 vercel.json       # Konfigurasi kompilasi dan perutean Vercel
- ┣ 📜 package.json      # Daftar dependensi dan skrip eksekusi manajer paket
- ┗ 📜 request.rest      # Skenario pengujian manual endpoint API
-```
+### 1. Models (Representasi Data)
+Bertindak sebagai entitas yang mendefinisikan skema data yang akan disimpan di dalam basis data (implementasi dengan ORM/ODM seperti Sequelize/Mongoose).
+
+*   **`ProjectModel.js`**: Menyimpan tabel Galeri Karya (media, judul, deskripsi, *tools*, tautan GitHub, Figma, situs web).
+*   **`ProfileModel.js`**: Menyimpan informasi *About Me*, biodata utama, dan integrasi media sosial.
+*   **`ResumeModel.js`**: Mengelola *metadata* tautan berkas CV/Resume (seperti `cv_url`, versi, status aktif).
+*   **`ExperienceModel.js`**: Menyimpan riwayat profesional (posisi, perusahaan, lokasi, durasi, deskripsi, keahlian, dan media pendukung).
+*   **`EducationModel.js`**: Menyimpan riwayat akademis (institusi, gelar, bidang studi, durasi, IPK/Nilai, aktivitas sosial).
+*   **`CertificationModel.js`**: Menyimpan data lisensi (nama, penerbit, ID/URL kredensial, masa berlaku).
+*   **`SkillModel.js`**: Menyimpan entri keahlian teknis (Frontend, Backend, Tools, Database) beserta aset visual.
+*   **`ArticleModel.js`**: Mengelola entitas konten blog, metadata publikasi, dan judul.
+*   **`MessageModel.js`**: Menampung *log* pesan masuk pengunjung situs.
+*   **`UserModel.js`**: Menyimpan kredensial otentikasi (username, *hashed password*, hak akses) untuk administrator CMS.
+*   **`SettingModels.js`**: Menyimpan parameter konfigurasi situs seperti optimasi SEO dan preferensi bahasa.
+
+### 2. Controllers (Logika Bisnis)
+Memproses permintaan masuk (HTTP *Requests*), memanipulasi model, dan mengirimkan respon (HTTP *Responses*).
+
+*   **`ProjectController.js`**: Operasi CRUD Galeri Karya.
+*   **`ProfileController.js`**: Manipulasi pembaruan profil dan tautan relasi.
+*   **`ResumeController.js`**: Penanganan operasi *I/O* berkas CV.
+*   **`ExperienceController.js`**: Mengelola entri pengalaman profesional.
+*   **`EducationController.js`**: Mengelola entri rekam jejak akademis.
+*   **`CertificationController.js`**: Mengelola validasi dan entri sertifikat.
+*   **`SkillController.js`**: Pemetaan daftar teknologi dan keahlian.
+*   **`ArticleController.js`**: Implementasi *drafting* dan *publishing* artikel.
+*   **`ContactController.js`**: Penanganan formulir pesan dan *webhook*/notifikasi email.
+*   **`AuthController.js`**: Implementasi alur otentikasi CMS dan penerbitan token.
+
+### 3. Routes (Pemetaan *Endpoint*)
+Menghubungkan URI (*Uniform Resource Identifier*) yang diakses klien ke fungsi pada *Controller* yang bersesuaian.
+
+*   `ProjectRoute.js` ➔ `/api/projects`
+*   `ProfileRoute.js` ➔ `/api/profile`
+*   `ResumeRoute.js` ➔ `/api/resume`
+*   `ExperienceRoute.js` ➔ `/api/experiences`
+*   `EducationRoute.js` ➔ `/api/educations`
+*   `CertificationRoute.js` ➔ `/api/certifications`
+*   `SkillRoute.js` ➔ `/api/skills`
+*   `ArticleRoute.js` ➔ `/api/articles`
+*   `ContactRoute.js` ➔ `/api/contact`
+*   `AuthRoute.js` ➔ `/api/auth`
+
+### 4. Middleware (Lapis Intersepsi)
+Berfungsi sebagai filter keamanan dan prapemrosesan sebelum *request* mencapai *Controller*.
+
+*   **`AuthMiddleware.js`**: Memvalidasi integritas *Bearer Token* pengguna sebelum operasi modifikasi data dieksekusi.
+*   **`UploadMiddleware.js`**: Menangani sistem penyimpanan berkas statis (gambar/PDF), pembatasan *size*, dan implementasi *watermark* untuk HKI.
+*   **`RateLimitMiddleware.js`**: Membatasi laju akses jaringan per IP untuk mencegah eksploitasi *spam* dan *bot*.
 
 ---
 
@@ -111,18 +146,14 @@ Berikut adalah abstraksi perutean utama yang diimplementasikan pada direktori `r
 | **Project** | `/api/projects` | `GET, POST, PUT, DELETE` | Manajemen operasi CRUD data proyek |
 | **Article** | `/api/articles` | `GET, POST, PUT, DELETE` | Manajemen operasi CRUD data artikel |
 | **Profile** | `/api/profile` | `GET, PUT` | Pengambilan dan pembaruan data profil |
+| **Resume** | `/api/resume` | `GET, POST, PUT` | Layanan pengunggahan dan pengunduhan dokumen CV |
+| **Experience** | `/api/experiences` | `GET, POST, PUT, DELETE` | Manajemen data riwayat pengalaman kerja / magang / organisasi|
+| **Education** | `/api/educations` | `GET, POST, PUT, DELETE` | Manajemen data latar belakang akademis |
+| **Certifications** | `/api/certifications` | `GET, POST, PUT, DELETE` | Manajemen data lisensi, bootcamp, dan sertifikasi |
+| **Skills** | `/api/skills` | `GET, POST, PUT, DELETE` | Manajemen inventaris keahlian (Tech Stack) |
 | **Contact** | `/api/contact` | `POST, GET` | Pengiriman pesan baru & pembacaan kotak masuk |
 
-*Catatan: Seluruh rute dengan modifikasi data (POST, PUT, DELETE) diwajibkan menyertakan token Bearer yang dikonfigurasi melalui `AuthMiddleware.js`.*
-
----
-
-## 🛡️ Standar Keamanan & Middleware
-
-Sistem *backend* ini telah dilengkapi dengan beberapa lapisan keamanan:
-1.  **`AuthMiddleware.js`**: Melakukan validasi token akses pada setiap permintaan ke rute terproteksi (*protected routes*).
-2.  **`RateLimitMiddleware.js`**: Membatasi jumlah permintaan berlebih dalam rentang waktu tertentu untuk menjaga stabilitas peladen.
-3.  **`UploadMiddleware.js`**: Mengelola pembatasan ukuran dan ekstensi berkas saat melakukan unggah media (gambar proyek/artikel).
+*Catatan: Seluruh endpoint yang memicu modifikasi status data (metode POST, PUT, DELETE—kecuali formulir kontak publik) diwajibkan untuk menyertakan Bearer Token pada Header Authorization sesuai kebijakan `AuthMiddleware.js`.*
 
 ---
 
