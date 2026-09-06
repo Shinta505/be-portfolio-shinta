@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import bcrypt from 'bcrypt';
 import { fileURLToPath } from "url";
-import db from "./config/database.js";
+import db from "./config/Database.js";
 import UserModel from './models/UserModel.js';
 
 import AuthRoute from "./routes/AuthRoute.js";
@@ -17,6 +17,7 @@ import ExperienceRoute from "./routes/ExperienceRoute.js";
 import EducationRoute from "./routes/EducationRoute.js";
 import CertificationRoute from "./routes/CertificationRoute.js";
 import SkillRoute from "./routes/SkillRoute.js";
+import UploadRoute from "./routes/UploadRoute.js";
 
 dotenv.config();
 
@@ -80,6 +81,7 @@ app.use('/api', ExperienceRoute);
 app.use('/api', EducationRoute);
 app.use('/api', CertificationRoute);
 app.use('/api', SkillRoute);
+app.use('/api', UploadRoute);
 
 // Endpoint Utama (Merender tampilan views/index.ejs)
 app.get('/', (req, res) => {

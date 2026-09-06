@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:5000/api
+@baseUrl = https://be-portfolio-shinta.vercel.app//api
 @authToken = {{login.response.body.accessToken}}
 
 ### ==========================================
