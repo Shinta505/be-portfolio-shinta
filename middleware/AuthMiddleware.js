@@ -1,73 +1,42 @@
 import jwt from "jsonwebtoken";
-import Users from "../models/UserModel.js";
 
 /**
- * Middleware untuk memverifikasi keabsahan JSON Web Token (JWT) pada header permintaan.
+ * Middleware Otentikasi untuk memverifikasi keabsahan JSON Web Token (JWT) 
+ * pada rute terlindungi dalam sistem manajemen konten (CMS)[cite: 1].
  */
-export const verifyToken = async(req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+export const verifyToken = (req, res, next) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1]; // Format: Bearer <token>
 
     if (!token) {
         return res.status(401).json({
-            msg: "Akses ditolak. Token autentikasi tidak ditemukan."
+            message: "Mohon masuk ke akun Anda terlebih dahulu. Token otentikasi tidak ditemukan."
         });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET || 'secret_key_sementara', async(err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
             return res.status(403).json({
-                msg: "Token tidak valid atau telah kedaluwarsa."
+                message: "Akses ditolak. Token tidak valid atau telah kedaluwarsa."
             });
         }
 
-        try {
-            const user = await Users.findOne({
-                where: { id: decoded.id }
-            });
+        // Menyematkan informasi pengguna ke objek request agar dapat diakses oleh controller selanjutnya
+        req.userId = decoded.uuid;
+        req.user = decoded;
 
-            if (!user) {
-                return res.status(404).json({
-                    msg: "Entitas pengguna sistem tidak ditemukan."
-                });
-            }
-
-            req.userId = user.id;
-            req.role = user.role;
-            next();
-        } catch (error) {
-            return res.status(500).json({
-                msg: `Kesalahan internal peladen saat verifikasi token: ${error.message}`
-            });
-        }
+        next();
     });
 };
 
 /**
- * Middleware untuk membatasi hak akses khusus Administrator (CMS).
+ * Middleware Otorisasi tambahan untuk memastikan hak akses khusus Administrator (opsional).
  */
-export const adminOnly = async(req, res, next) => {
-    try {
-        const user = await Users.findOne({
-            where: { id: req.userId }
-        });
-
-        if (!user) {
-            return res.status(404).json({
-                msg: "Pengguna tidak ditemukan."
-            });
-        }
-
-        if (user.role !== 'admin') {
-            return res.status(403).json({
-                msg: "Akses terlarang. Hak istimewa administrator diperlukan untuk sumber daya ini."
-            });
-        }
-
-        next();
-    } catch (error) {
-        return res.status(500).json({
-            msg: `Kesalahan internal peladen saat validasi peran: ${error.message}`
+export const adminOnly = (req, res, next) => {
+    if (!req.user || req.user.role !== 'admin') {
+        return res.status(403).json({
+            message: "Akses terlarang. Anda tidak memiliki hak istimewa sebagai administrator."
         });
     }
+    next();
 };

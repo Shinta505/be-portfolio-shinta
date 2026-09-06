@@ -1,147 +1,387 @@
 @baseUrl = http://localhost:5000/api
-@authToken = {{login.response.body.token}}
+@authToken = {{login.response.body.accessToken}}
 
-### 1. AUTHENTICATION
+### ==========================================
+### 1. AUTHENTICATION API
+### ==========================================
 
-# Login Admin
 # @name login
 POST {{baseUrl}}/login
 Content-Type: application/json
 
 {
-  "username": "ShintaNursobah",
-  "password": "ShintaLucu12"
+    "username": "ShintaNursobah",
+    "password": "ShintaLucu12"
 }
 
-### Check Current Logged-in Admin Profile (/me)
+### Get Current Admin Profile (Me)
 GET {{baseUrl}}/me
 Authorization: Bearer {{authToken}}
 
-### Logout (Client-side stateless handling)
+### Logout Admin
 DELETE {{baseUrl}}/logout
+Authorization: Bearer {{authToken}}
 
 
-### 2. PROFILE
+### ==========================================
+### 2. PROFILE API
+### ==========================================
 
-# Get Profile (Public)
+### Get Public Profile
 GET {{baseUrl}}/profile
 
-### Update Profile (Protected - Admin)
+### Update Profile (Admin Only)
 PUT {{baseUrl}}/profile
-Content-Type: application/json
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 {
-  "name": "Shinta Nursobah",
-  "title": "Fullstack Web Developer & UI/UX Designer",
-  "bio": "Deskripsi singkat tentang latar belakang, keahlian, dan minat profesional.",
-  "profile_image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRrr-GVtYd8OOXIKAahiwohmAr2cVdvULO1bRUmHYJUfA&s.jpg",
-  "education": "[]",
-  "experience": "[]",
-  "social_links": "{\"github\": \"https://github.com/Shinta505\", \"linkedin\": \"https://linkedin.com/in/shinta-nursobah-chairani\", \"instagram\": \"https://instagram.com/by_shntaa\"}"
+    "fullname": "Shinta Nursobah Chairani",
+    "headline": "Full-stack Web Developer & UI/UX Designer",
+    "bio": "Deskripsi singkat mengenai latar belakang profesional dan keahlian Anda telah di update.",
+    "profile_image": "/uploads/profile.jpg",
+    "location": "Sleman, Yogyakarta",
+    "email": "email@example.com",
+    "github_url": "https://github.com/username",
+    "linkedin_url": "https://linkedin.com/in/username",
+    "instagram_url": "https://instagram.com/username",
+    "tiktok_url": "",
+    "twitter_url": ""
 }
 
 
-### 3. PROJECTS (Galeri Karya)
+### ==========================================
+### 3. PROJECT API (GALERI KARYA)
+### ==========================================
 
-# Get All Projects (Public)
+### Get All Projects (Optional query: ?category=Website%20Development)
 GET {{baseUrl}}/projects
 
-### Get Projects Filtered by Category (Public)
-GET {{baseUrl}}/projects?category=Website Development
+### Get Project by UUID or Slug
+GET {{baseUrl}}/projects/ce7fb94d-4d9a-4d6e-944c-44361cf81260
 
-### Get Project By UUID (Public)
-# Ganti UUID dengan UUID yang valid
-GET {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
-
-### Create Project (Protected - Admin)
+### Create New Project (Admin Only)
 POST {{baseUrl}}/projects
-Content-Type: application/json
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 {
-  "title": "Aplikasi VocabMaster",
-  "category": "Website Development",
-  "description": "Membuat aplikasi belajar bahasa inggris lengkap dengan backend ExpressJS dan database PostgreSQL Supabase.",
-  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRYBUM6kg04UW80B4kCY4_ywUEJw9PD4igEBEHHsWnsYw&s=10.jpg",
-  "projectUrl": "https://github.com/Shinta505/VocabMaster"
+    "title": "Portfolio Website CMS",
+    "category": "Website Development",
+    "description": "Sistem manajemen konten portofolio pribadi berbasis Node.js dan Supabase.",
+    "tools": "Node.js, Express, Sequelize, Tailwind CSS, Supabase",
+    "github_url": "https://github.com/username/project",
+    "figma_url": "https://figma.com/file/xyz",
+    "website_url": "https://example.com"
 }
 
-### Update Project (Protected - Admin)
-PATCH {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
-Content-Type: application/json
+### Update Project by UUID (Admin Only)
+PUT {{baseUrl}}/projects/ce7fb94d-4d9a-4d6e-944c-44361cf81260
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 {
-  "title": "Aplikasi VocabMaster Update",
-  "category": "Website Development",
-  "description": "Membuat aplikasi belajar bahasa inggris lengkap dengan JavaScript dan ExpressJS",
-  "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS51Wl9PwAeHcOB5XjjVmaBVFJ2SWEAKmYBiXIdOxkb_g&s=10.jpg",
-  "projectUrl": "https://github.com/Shinta505/VocabMaster"
+    "title": "Portfolio Website CMS Updated",
+    "category": "Website Development",
+    "description": "Pembaruan deskripsi sistem manajemen konten portofolio.",
+    "tools": "Node.js, Express, Sequelize, Supabase",
+    "github_url": "https://github.com/username/project",
+    "figma_url": null,
+    "website_url": "https://example.com"
 }
 
-### Delete Project (Protected - Admin)
-DELETE {{baseUrl}}/projects/a616872b-56da-487e-8742-d35eed110681
+### Delete Project by UUID (Admin Only)
+DELETE {{baseUrl}}/projects/ce7fb94d-4d9a-4d6e-944c-44361cf81260
 Authorization: Bearer {{authToken}}
 
 
-### 4. ARTICLES (Blog)
+### ==========================================
+### 4. ARTICLE API (BLOG & ARTIKEL)
+### ==========================================
 
-# Get All Articles (Public)
+### Get All Articles (Optional query: ?status=published)
 GET {{baseUrl}}/articles
 
-### Get Article By ID / UUID (Public)
-GET {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
+### Get Article by UUID or Slug
+GET {{baseUrl}}/articles/cd629dc9-8f4d-4d9e-b0f0-9149993ddf83
 
-### Get Article By Slug (Public)
-GET {{baseUrl}}/articles/slug/belajar-sequelize-dan-supabase
-
-### Create Article (Protected - Admin)
+### Create New Article (Admin Only)
 POST {{baseUrl}}/articles
-Content-Type: application/json
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 {
-  "title": "Belajar Sequelize dan Supabase",
-  "content": "Ini adalah isi konten artikel lengkap seputar pengembangan web menggunakan Sequelize dan database PostgreSQL di Supabase.",
-  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxV4EaRAfd7q6YnsVl2200EU_IWyL1lSqiM1-SPlXPZA&s.jpg",
-  "publishedAt": "2026-09-05T00:00:00.000Z"
+    "title": "Belajar Express JS dan Sequelize",
+    "slug": "belajar-express-js-dan-sequelize",
+    "content": "Konten lengkap artikel mengenai backend development...",
+    "status": "published"
 }
 
-### Update Article (Protected - Admin)
-PATCH {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
-Content-Type: application/json
+### Update Article by UUID (Admin Only)
+PUT {{baseUrl}}/articles/cd629dc9-8f4d-4d9e-b0f0-9149993ddf83
 Authorization: Bearer {{authToken}}
+Content-Type: application/json
 
 {
-  "title": "Belajar Sequelize dan Supabase Update",
-  "content": "Konten artikel yang telah diperbarui secara berkala.",
-  "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-joWSyCfvx0fbILZcasyI09tPLQ4qPhg3wGL5VkXDiw&s=10.jpg",
-  "publishedAt": "2026-09-05T00:00:00.000Z"
+    "title": "Belajar Express JS dan Sequelize Updated",
+    "slug": "belajar-express-js-dan-sequelize-updated",
+    "content": "Pembaruan isi konten artikel.",
+    "status": "published"
 }
 
-### Delete Article (Protected - Admin)
-DELETE {{baseUrl}}/articles/8134ac5f-fd63-4f36-b981-c9140143543c
+### Delete Article by UUID (Admin Only)
+DELETE {{baseUrl}}/articles/cd629dc9-8f4d-4d9e-b0f0-9149993ddf83
 Authorization: Bearer {{authToken}}
 
 
-### 5. CONTACT (Pesan Masuk)
+### ==========================================
+### 5. CONTACT API (FORMULIR KONTAK)
+### ==========================================
 
-# Send Message / Form Contact (Public)
+### Send New Message (Public - Rate Limited)
 POST {{baseUrl}}/contact
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "johndoe@example.com",
-  "subject": "Kerjasama Proyek",
-  "message": "Halo, saya tertarik untuk mendiskusikan pembuatan website bersama Anda."
+    "name": "Pengunjung",
+    "email": "pengunjung@example.com",
+    "message": "Halo, saya ingin mendiskusikan kolaborasi project."
 }
 
-### Get All Messages (Protected - Admin)
-GET {{baseUrl}}/contact
+### Get All Messages (Admin Only)
+GET {{baseUrl}}/contacts
 Authorization: Bearer {{authToken}}
 
-### Delete Message by ID (Protected - Admin)
-DELETE {{baseUrl}}/contact/1
+### Get Message Detail by UUID (Admin Only)
+GET {{baseUrl}}/contacts/cd89126a-583a-4e20-88aa-2a9de03adfbe
+Authorization: Bearer {{authToken}}
+
+### Delete Message by UUID (Admin Only)
+DELETE {{baseUrl}}/contacts/cd89126a-583a-4e20-88aa-2a9de03adfbe
+Authorization: Bearer {{authToken}}
+
+
+### ==========================================
+### 6. RESUME / CV API
+### ==========================================
+
+### Get All Resumes
+GET {{baseUrl}}/resumes
+
+### Get Active Resume for Public
+GET {{baseUrl}}/resumes/active
+
+### Create New Resume (Admin Only)
+POST {{baseUrl}}/resumes
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "version_name": "Fullstack Developer v1",
+    "cv_url": "https://example.com/cv.pdf",
+    "is_active": true
+}
+
+### Update Resume by UUID (Admin Only)
+PUT {{baseUrl}}/resumes/93e680f5-bd85-42f9-adae-55fa845c7bcf
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "version_name": "Fullstack Developer v2",
+    "cv_url": "https://example.com/cv-v2.pdf",
+    "is_active": true
+}
+
+### Set Resume as Active Main (Admin Only)
+PATCH {{baseUrl}}/resumes/93e680f5-bd85-42f9-adae-55fa845c7bcf/active
+Authorization: Bearer {{authToken}}
+
+### Delete Resume by UUID (Admin Only)
+DELETE {{baseUrl}}/resumes/93e680f5-bd85-42f9-adae-55fa845c7bcf
+Authorization: Bearer {{authToken}}
+
+
+### ==========================================
+### 7. EXPERIENCE API (RIWAYAT PEKERJAAN)
+### ==========================================
+
+### Get All Experiences
+GET {{baseUrl}}/experiences
+
+### Get Experience Detail by ID/UUID
+GET {{baseUrl}}/experiences/834da001-d5d5-4430-ae69-492f85014ff0
+
+### Create Experience (Admin Only)
+POST {{baseUrl}}/experiences
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "position": "Frontend Developer",
+    "company": "Tech Company",
+    "location": "Yogyakarta",
+    "location_type": "Jarak Jauh",
+    "employment_type": "Penuh Waktu",
+    "start_date": "Januari 2024",
+    "end_date": "Sekarang",
+    "description": "Mengembangkan antarmuka pengguna menggunakan React.js dan Tailwind CSS.",
+    "skills": "React.js, Tailwind CSS, JavaScript",
+    "media": ""
+}
+
+### Update Experience (Admin Only)
+PATCH {{baseUrl}}/experiences/834da001-d5d5-4430-ae69-492f85014ff0
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "position": "Senior Frontend Developer",
+    "company": "Tech Company",
+    "location": "Yogyakarta",
+    "location_type": "Jarak Jauh",
+    "employment_type": "Penuh Waktu",
+    "start_date": "Januari 2024",
+    "end_date": "Sekarang",
+    "description": "Memimpin tim frontend dalam pengembangan web aplikasi.",
+    "skills": "React.js, Next.js, Tailwind CSS",
+    "media": ""
+}
+
+### Delete Experience (Admin Only)
+DELETE {{baseUrl}}/experiences/834da001-d5d5-4430-ae69-492f85014ff0
+Authorization: Bearer {{authToken}}
+
+
+### ==========================================
+### 8. EDUCATION API (RIWAYAT PENDIDIKAN)
+### ==========================================
+
+### Get All Educations
+GET {{baseUrl}}/educations
+
+### Get Education Detail by ID/UUID
+GET {{baseUrl}}/educations/123e4567-e89b-12d3-a456-426614174000
+
+### Create Education (Admin Only)
+POST {{baseUrl}}/educations
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "institution_logo": null,
+    "institution_name": "UPN \"Veteran\" Yogyakarta",
+    "degree": "Sarjana Komputer",
+    "field_of_study": "Teknik Informatika",
+    "start_date": "Agustus 2022",
+    "end_date": "Sekarang",
+    "score": "3.85",
+    "activities": "Aktif dalam organisasi kemahasiswaan dan riset.",
+    "description": "Fokus pada pengembangan perangkat lunak dan kecerdasan buatan.",
+    "media": ""
+}
+
+### Update Education (Admin Only)
+PATCH {{baseUrl}}/educations/650b3ddc-b0b8-40a0-958d-d3bb5660cd1d
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "institution_name": "UPN \"Veteran\" Yogyakarta",
+    "degree": "Sarjana Komputer",
+    "field_of_study": "Teknik Informatika",
+    "start_date": "Agustus 2022",
+    "end_date": "2026",
+    "score": "3.90",
+    "activities": "Menyelesaikan studi sarjana informatika.",
+    "description": "Lulus dengan predikat memuaskan.",
+    "media": ""
+}
+
+### Delete Education (Admin Only)
+DELETE {{baseUrl}}/educations/650b3ddc-b0b8-40a0-958d-d3bb5660cd1d
+Authorization: Bearer {{authToken}}
+
+
+### ==========================================
+### 9. CERTIFICATION API (SERTIFIKASI & LISENSI)
+### ==========================================
+
+### Get All Certifications
+GET {{baseUrl}}/certifications
+
+### Get Certification Detail by UUID
+GET {{baseUrl}}/certifications/ad5ac4bd-ba3f-4698-a9ef-ad7092463bcd
+
+### Create Certification (Admin Only)
+POST {{baseUrl}}/certifications
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "Certified JavaScript Developer",
+    "issuer": "Dicoding Indonesia",
+    "issueDate": "Juni 2024",
+    "expirationDate": "Juni 2027",
+    "credentialId": "CERT-12345",
+    "credentialUrl": "https://www.dicoding.com/certificates/xyz",
+    "skills": "JavaScript, Node.js",
+    "media": ""
+}
+
+### Update Certification (Admin Only)
+PATCH {{baseUrl}}/certifications/ad5ac4bd-ba3f-4698-a9ef-ad7092463bcd
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "Certified JavaScript Developer",
+    "issuer": "Dicoding Indonesia",
+    "issueDate": "Juni 2024",
+    "expirationDate": "Juni 2027",
+    "credentialId": "CERT-12345",
+    "credentialUrl": "https://www.dicoding.com/certificates/xyz",
+    "skills": "JavaScript, Node.js, Express.js",
+    "media": ""
+}
+
+### Delete Certification (Admin Only)
+DELETE {{baseUrl}}/certifications/ad5ac4bd-ba3f-4698-a9ef-ad7092463bcd
+Authorization: Bearer {{authToken}}
+
+
+### ==========================================
+### 10. SKILL API (KEAHLIAN & TEKNOLOGI)
+### ==========================================
+
+### Get All Skills
+GET {{baseUrl}}/skills
+
+### Get Skill Detail by UUID
+GET {{baseUrl}}/skills/3cf767a4-dc5e-4dda-b557-eba44f80e22b
+
+### Create Skill (Admin Only)
+POST {{baseUrl}}/skills
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "React.js",
+    "category": "Frontend",
+    "icon": "react-icon"
+}
+
+### Update Skill (Admin Only)
+PATCH {{baseUrl}}/skills/3cf767a4-dc5e-4dda-b557-eba44f80e22b
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "name": "React.js / Next.js",
+    "category": "Frontend",
+    "icon": "react-icon"
+}
+
+### Delete Skill (Admin Only)
+DELETE {{baseUrl}}/skills/3cf767a4-dc5e-4dda-b557-eba44f80e22b
 Authorization: Bearer {{authToken}}

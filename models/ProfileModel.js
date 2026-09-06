@@ -1,50 +1,63 @@
-import { Sequelize } from "sequelize";
+import { DataTypes } from "sequelize";
 import db from "../config/database.js";
 
-const { DataTypes } = Sequelize;
-
 const ProfileModel = db.define('profiles', {
-    id: {
-        type: DataTypes.INTEGER,
+    uuid: {
+        type: DataTypes.STRING,
+        defaultValue: DataTypes.UUIDV4,
+        allowNull: false,
         primaryKey: true,
-        autoIncrement: true
+        unique: true
     },
-    name: {
+    fullname: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
             notEmpty: true
         }
     },
-    title: {
+    headline: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'Contoh: Full Stack Developer / UI UX Designer'
+        allowNull: true
     },
     bio: {
         type: DataTypes.TEXT,
-        allowNull: true,
-        comment: 'Biografi singkat atau cerita latar belakang'
+        allowNull: true
     },
     profile_image: {
         type: DataTypes.STRING,
-        allowNull: true,
-        comment: 'URL atau path foto profil'
+        allowNull: true
     },
-    education: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-        comment: 'Informasi latar belakang pendidikan (bisa format JSON string atau teks)'
+    location: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
-    experience: {
-        type: DataTypes.TEXT,
+    email: {
+        type: DataTypes.STRING,
         allowNull: true,
-        comment: 'Informasi pengalaman profesional'
+        validate: {
+            isEmail: true
+        }
     },
-    social_links: {
-        type: DataTypes.TEXT,
-        allowNull: true,
-        comment: 'Tautan integrasi media sosial (bisa disimpan dalam format JSON string)'
+    github_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    linkedin_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    instagram_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    tiktok_url: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    twitter_url: {
+        type: DataTypes.STRING,
+        allowNull: true
     }
 }, {
     freezeTableName: true,

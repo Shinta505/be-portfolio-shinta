@@ -23,22 +23,45 @@ Konfigurasikan instansiasi Express.js, pasang middleware global (seperti CORS da
 
 
 
-Berdasarkan struktur file yang kamu punya, urutan pengerjaan fitur per modul (dari Models sampai Routes) adalah sebagai berikut:
+Berikut adalah urutan pengerjaan fitur per modul yang sudah disesuaikan dengan seluruh tambahan entitas data baru kamu (Resume, Experience, Education, Certification, Skills & Tech Stack), mengikuti prinsip hierarki dependensi dari Models hingga integrasi ke `index.js`:
 
-1. Auth (UserModel)
-Selesaikan bagian autentikasi dan User terlebih dahulu karena entitas lain seperti Article atau Project biasanya memerlukan relasi ke tabel User (misalnya sebagai author_id atau user_id). Buat UserModel.js, lalu AuthController.js, pasang middleware pelindung di AuthMiddleware.js jika diperlukan, dan tutup dengan AuthRoute.js.
+1. Auth (`UserModel.js`)
+ Alasan: Selesaikan bagian autentikasi dan user terlebih dahulu karena entitas lain seperti Project atau Article memerlukan relasi ke tabel User (sebagai pemilik data atau author).
+ Urutan: `UserModel.js` -> `AuthController.js` -> `AuthMiddleware.js` -> `AuthRoute.js`.
 
-2. Profile
-Modul Profile biasanya berelasi langsung dengan User (hubungan one-to-one). Kerjakan ProfileModel.js, ProfileController.js, hingga ProfileRoute.js.
 
-3. Project
-Modul Project umumnya berdiri sendiri atau hanya membutuhkan relasi ke User. Lanjutkan dengan ProjectModel.js, ProjectController.js, dan ProjectRoute.js.
+2. Profile & Resume (`ProfileModel.js`, `ResumeModel.js`)
+ Alasan: Modul profil utama dan tautan CV/resume bersifat fundamental untuk halaman About dan biasanya berelasi langsung dengan entitas User (hubungan one-to-one).
+ Urutan: `ProfileModel.js` & `ResumeModel.js` -> `ProfileController.js` & `ResumeController.js` -> `ProfileRoute.js` & `ResumeRoute.js`.
 
-4. Article
-Sama seperti Project, modul ini biasanya independen atau terikat ke tabel User. Kerjakan ArticleModel.js, ArticleController.js, dan ArticleRoute.js.
 
-5. Contact (Message)
-Modul ini biasanya berfungsi untuk menampung pesan masuk dari pengunjung (seperti tabel MessageModel.js). Karena sifatnya yang independen dan tidak terikat dengan entitas kompleks lain, posisikan modul ini di urutan berikutnya. Buat MessageModel.js, ContactController.js, dan ContactRoute.js.
+3. Experience, Education, & Certification (`ExperienceModel.js`, `EducationModel.js`, `CertificationModel.js`)
+ Alasan: Bagian rincian riwayat di halaman About ini dipecah menjadi tabel-tabel relasional 1-to-many agar mudah dikelola secara dinamis via CMS.
+ Urutan:
+ `ExperienceModel.js` -> `ExperienceController.js` -> `ExperienceRoute.js`
+ `EducationModel.js` -> `EducationController.js` -> `EducationRoute.js`
+ `CertificationModel.js` -> `CertificationController.js` -> `CertificationRoute.js`
 
-6. Setting / Konfigurasi Tambahan
-Jika ada model pendukung lain seperti SettingModel.js, selesaikan di tahap akhir sebelum semuanya dirangkum ke dalam index.js.
+
+4. Skills & Tech Stack (`SkillModel.js`)
+ Alasan: Modul khusus untuk menampung data keahlian dan teknologi (frontend, backend, tools, database) yang berdiri sendiri atau bisa dihubungkan secara relasional ke modul lain.
+ Urutan: `SkillModel.js` -> `SkillController.js` -> `SkillRoute.js`.
+
+
+5. Project (`ProjectModel.js`)
+ Alasan: Memuat data galeri karya dengan kelengkapan media, judul, deskripsi, tools, GitHub, Figma, dan website link.
+ Urutan: `ProjectModel.js` -> `ProjectController.js` -> `ProjectRoute.js`.
+
+
+6. Article (`ArticleModel.js`)
+ Alasan: Menangani fitur blog atau tulisan artikel, independen atau terikat ke tabel User.
+ Urutan: `ArticleModel.js` -> `ArticleController.js` -> `ArticleRoute.js`.
+
+
+7. Contact / Message (`MessageModel.js`)
+ Alasan: Menampung pesan masuk dari pengunjung dengan kolom nama, email, dan pesan. Sifatnya terisolasi dan mandiri.
+ Urutan: `MessageModel.js` -> `ContactController.js` (lengkap dengan RateLimitMiddleware) -> `ContactRoute.js`.
+
+
+8. Settings & Global Middleware (`SettingModel.js`, `UploadMiddleware.js`, `index.js`)
+ Alasan: Tahap akhir mencakup pengaturan web (SEO, tema, multi-bahasa), penyiapan `UploadMiddleware` multi-direktori (untuk folder CV, logo, dan media project), serta merangkum seluruhnya di dalam peluncur utama aplikasi (`index.js`).

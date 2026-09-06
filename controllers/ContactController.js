@@ -1,86 +1,126 @@
 import MessageModel from "../models/MessageModel.js";
 
-// Mengambil seluruh daftar pesan masuk (Biasanya digunakan pada halaman dashboard admin/CMS)
-export const getMessages = async(req, res) => {
+/**
+ * @file ContactController.js
+ * @description Controller untuk mengelola pesan yang dikirim lewat formulir kontak 
+ * (nama, email, pesan) serta manajemen data pesan untuk keperluan administrator (CMS)[cite: 1].
+ */
+
+/**
+ * Mengirim pesan baru dari pengunjung melalui Formulir Kontak publik.
+ * @route POST /api/contact
+ */
+export const sendMessage = async(req, res) => {
     try {
-        const messages = await MessageModel.findAll({
-            order: [
-                ['createdAt', 'DESC']
-            ]
-        });
-        return res.status(200).json({
-            status: "success",
-            data: messages
-        });
-    } catch (error) {
-        return res.status(500).json({
-            status: "error",
-            message: "Gagal mengambil data pesan.",
-            error: error.message
-        });
-    }
-};
+        const { name, email, message } = req.body;
 
-// Menambahkan atau mengirim pesan baru dari formulir kontak publik
-export const createMessage = async(req, res) => {
-    const { name, email, subject, message } = req.body;
+        // Validasi input sederhana
+        if (!name || !email || !message) {
+            return res.status(400).json({
+                message: "Semua kolom (nama, email, pesan) wajib diisi."
+            });
+        }
 
-    // Validasi sederhana sisi backend
-    if (!name || !email || !subject || !message) {
-        return res.status(400).json({
-            status: "fail",
-            message: "Semua kolom wajib diisi."
-        });
-    }
-
-    try {
+        // Simpan pesan ke database PostgreSQL menggunakan Sequelize dan Supabase
         const newMessage = await MessageModel.create({
             name,
             email,
-            subject,
             message
         });
 
         return res.status(201).json({
-            status: "success",
-            message: "Pesan berhasil dikirim.",
+            message: "Pesan Anda berhasil dikirim. Terima kasih telah menghubungi kami.",
             data: newMessage
         });
     } catch (error) {
-        return res.status(400).json({
-            status: "fail",
-            message: "Gagal mengirim pesan.",
+        console.error("Gagal mengirim pesan:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server saat mengirim pesan.",
             error: error.message
         });
     }
 };
 
-// Menghapus pesan berdasarkan ID tertentu (Hak akses admin)
-export const deleteMessage = async(req, res) => {
-    const { id } = req.params;
-
+/**
+ * Mendapatkan seluruh daftar pesan masuk (Khusus Administrator/CMS).
+ * @route GET /api/contacts
+ */
+export const getMessages = async(req, res) => {
     try {
-        const existingMessage = await MessageModel.findByPk(id);
+        const messages = await MessageModel.findAll({
+            order: [
+                ["createdAt", "DESC"]
+            ]
+        });
 
-        if (!existingMessage) {
+        return res.status(200).json({
+            message: "Berhasil mengambil seluruh daftar pesan.",
+            total: messages.length,
+            data: messages
+        });
+    } catch (error) {
+        console.error("Gagal mengambil daftar pesan:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server saat mengambil data pesan.",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Mendapatkan detail pesan berdasarkan UUID (Khusus Administrator/CMS).
+ * @route GET /api/contacts/:uuid
+ */
+export const getMessageById = async(req, res) => {
+    try {
+        const message = await MessageModel.findOne({
+            where: { uuid: req.params.uuid }
+        });
+
+        if (!message) {
             return res.status(404).json({
-                status: "fail",
                 message: "Pesan tidak ditemukan."
             });
         }
 
-        await MessageModel.destroy({
-            where: { id }
+        return res.status(200).json({
+            message: "Berhasil mengambil detail pesan.",
+            data: message
+        });
+    } catch (error) {
+        console.error("Gagal mengambil detail pesan:", error);
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server saat mengambil detail pesan.",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Menghapus pesan berdasarkan UUID (Khusus Administrator/CMS).
+ * @route DELETE /api/contacts/:uuid
+ */
+export const deleteMessage = async(req, res) => {
+    try {
+        const message = await MessageModel.findOne({
+            where: { uuid: req.params.uuid }
         });
 
+        if (!message) {
+            return res.status(404).json({
+                message: "Pesan yang ingin dihapus tidak ditemukan."
+            });
+        }
+
+        await message.destroy();
+
         return res.status(200).json({
-            status: "success",
             message: "Pesan berhasil dihapus."
         });
     } catch (error) {
+        console.error("Gagal menghapus pesan:", error);
         return res.status(500).json({
-            status: "error",
-            message: "Gagal menghapus pesan.",
+            message: "Terjadi kesalahan pada server saat menghapus pesan.",
             error: error.message
         });
     }

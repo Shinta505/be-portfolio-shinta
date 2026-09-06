@@ -1,30 +1,79 @@
-1. Models (Struktur Database)
+Models (Struktur Database)
 Fungsi: Bertindak sebagai "cetakan" atau "lemari arsip" yang mendefinisikan bentuk data yang akan disimpan di dalam database (misalnya menggunakan Sequelize/PostgreSQL).
- `ProjectModel.js`: Menyimpan tabel data Galeri Karya, termasuk judul, tautan gambar, deskripsi, dan kategorinya (UI/UX, Web Dev, Mobile, dll).
- `ProfileModel.js`: Menyimpan informasi Halaman Tentang Saya, riwayat pendidikan, dan tautan Integrasi Media Sosial.
- `ArticleModel.js`: Menyimpan teks konten, judul, serta tanggal publikasi untuk fitur Blog atau Artikel.
- `MessageModel.js`: Menyimpan riwayat pesan masuk dari pengunjung melalui Formulir Kontak.
- `UserModel.js`: Menyimpan data kredensial (username, password, dan level hak akses) untuk sistem login admin (CMS) dan Fitur Kolaborasi tim.
- `SettingModels.js`: Menyimpan data pengaturan web yang bisa diubah, seperti konfigurasi Optimasi SEO (teks meta), Kustomisasi Desain (kode warna/tema), dan pengaturan Dukungan Multi-Bahasa.
 
-2. Controllers (Pusat Logika Aplikasi)
+ProjectModel.js: Menyimpan tabel data Galeri Karya, termasuk media, judul projek, deskripsi, tools yang dipakai, tautan GitHub, tautan Figma, dan tautan website.
+
+ProfileModel.js: Menyimpan informasi Halaman Tentang Saya, biodata utama, dan tautan Integrasi Media Sosial.
+
+ResumeModel.js: Menyimpan tautan file CV/resume (seperti cv_url, version_name, atau flag active) agar bisa diperbarui secara dinamis.
+
+ExperienceModel.js: Menyimpan riwayat pekerjaan dengan kolom: posisi, perusahaan, lokasi, jenis lokasi (Di lokasi, Gabungan, Jarak Jauh), jenis pekerjaan (Penuh Waktu, Paruh Waktu, Pekerja Mandiri, Pekerja Lepas, Kontrak), bulan dan tahun mulai, bulan dan tahun berakhir, deskripsi, keahlian, dan media (logo/lampiran).
+
+EducationModel.js: Menyimpan riwayat pendidikan dengan kolom: logo institusi, institusi, gelar, bidang studi, bulan dan tahun mulai, bulan dan tahun berakhir, nilai, aktivitas dan kegiatan sosial, deskripsi, dan media.
+
+CertificationModel.js: Menyimpan lisensi dan sertifikasi dengan kolom: nama sertifikasi, organisasi penerbit, bulan dan tahun mulai penerbitan, bulan dan tahun kadaluwarsa penerbitan, ID kredensial, URL kredensial, keahlian, dan media.
+
+SkillModel.js / TechStackModel.js: Menyimpan data keahlian dan teknologi untuk halaman khusus skills dan teknologi, dengan kolom seperti nama, kategori (Frontend, Backend, Tools, Database), dan URL ikon.
+
+ArticleModel.js: Menyimpan teks konten, judul, serta tanggal publikasi untuk fitur Blog atau Artikel.
+
+MessageModel.js: Menyimpan riwayat pesan masuk dari pengunjung melalui Formulir Kontak dengan kolom nama, email, dan pesan.
+
+UserModel.js: Menyimpan data kredensial (username, password, dan level hak akses) untuk sistem login admin (CMS) dan Fitur Kolaborasi tim.
+
+SettingModels.js: Menyimpan data pengaturan web yang bisa diubah, seperti konfigurasi Optimasi SEO (teks meta), Kustomisasi Desain (kode warna/tema), dan pengaturan Dukungan Multi-Bahasa.
+
+Controllers (Pusat Logika Aplikasi)
 Fungsi: Bertindak sebagai "otak" atau "manajer" yang memproses permintaan pengunjung, mengambil data dari Models, dan memberikan respon akhir.
- `ProjectController.js`: Memproses perintah untuk menambah, menampilkan, mengubah, atau menghapus karya di Galeri.
- `ProfileController.js`: Mengelola alur pembaruan teks biodata dan tautan sosial media.
- `ArticleController.js`: Mengatur logika pembuatan tulisan, mode draft, dan publikasi blog.
- `ContactController.js`: Mengelola pesan yang dikirim lewat form kontak dan mengatur pengiriman notifikasi email otomatis.
- `AuthController.js`: Memproses pencocokan username dan password untuk masuk ke dasbor CMS (Sistem Manajemen Konten).
 
-3. Routes (Jalur URL)
-Fungsi: Bertindak sebagai "papan petunjuk jalan" yang menghubungkan URL yang diketik pengguna (misalnya `/api/karya`) ke Controller yang tepat.
- `ProjectRoute.js`: Mendefinisikan jalur endpoint untuk operasi Galeri Karya.
- `ProfileRoute.js`: Mendefinisikan jalur endpoint untuk Halaman Tentang Saya.
- `ArticleRoute.js`: Mendefinisikan jalur endpoint untuk mengakses Blog.
- `ContactRoute.js`: Mendefinisikan jalur endpoint untuk menampung pengiriman Formulir Kontak.
- `AuthRoute.js`: Mendefinisikan jalur endpoint khusus login admin.
+ProjectController.js: Memproses perintah untuk menambah, menampilkan, mengubah, atau menghapus karya di Galeri dengan rincian lengkap seperti tautan GitHub, Figma, dan website.
 
-4. Middleware (Lapis Keamanan & Filter)
+ProfileController.js: Mengelola alur pembaruan teks biodata dan tautan sosial media.
+
+ResumeController.js: Mengatur logika unggah, ganti, dan unduh tautan file CV/resume.
+
+ExperienceController.js: Mengelola operasi CRUD (Create, Read, Update, Delete) untuk riwayat pekerjaan di halaman about.
+
+EducationController.js: Mengelola operasi CRUD untuk riwayat pendidikan.
+
+CertificationController.js: Mengelola operasi CRUD untuk lisensi dan sertifikasi.
+
+SkillController.js: Mengelola daftar keahlian dan teknologi yang ditampilkan pada halaman skills.
+
+ArticleController.js: Mengatur logika pembuatan tulisan, mode draft, dan publikasi blog.
+
+ContactController.js: Mengelola pesan yang dikirim lewat formulir kontak (nama, email, pesan) dan mengatur pengiriman notifikasi email otomatis.
+
+AuthController.js: Memproses pencocokan username dan password untuk masuk ke dasbor CMS (Sistem Manajemen Konten).
+
+Routes (Jalur URL)
+Fungsi: Bertindak sebagai "papan petunjuk jalan" yang menghubungkan URL yang diketik pengguna (misalnya /api/karya) ke Controller yang tepat.
+
+ProjectRoute.js: Mendefinisikan jalur endpoint untuk operasi Galeri Karya dan rincian projects.
+
+ProfileRoute.js: Mendefinisikan jalur endpoint untuk Halaman Tentang Saya.
+
+ResumeRoute.js: Mendefinisikan jalur endpoint untuk manajemen file CV/resume.
+
+ExperienceRoute.js: Mendefinisikan jalur endpoint untuk data pengalaman kerja (/api/experiences).
+
+EducationRoute.js: Mendefinisikan jalur endpoint untuk data pendidikan (/api/educations).
+
+CertificationRoute.js: Mendefinisikan jalur endpoint untuk data sertifikasi (/api/certifications).
+
+SkillRoute.js: Mendefinisikan jalur endpoint untuk data skills dan tech stack (/api/skills).
+
+ArticleRoute.js: Mendefinisikan jalur endpoint untuk mengakses Blog.
+
+ContactRoute.js: Mendefinisikan jalur endpoint untuk menampung pengiriman Formulir Kontak.
+
+AuthRoute.js: Mendefinisikan jalur endpoint khusus login admin.
+
+Middleware (Lapis Keamanan & Filter)
 Fungsi: Bertindak sebagai "satpam pos penjagaan" yang memeriksa setiap akses sebelum diizinkan masuk ke dalam Controller.
- `AuthMiddleware.js`: Memastikan perlindungan halaman CMS, di mana hanya pengguna dengan token otentikasi valid yang bisa menambah atau menghapus karya.
- `UploadMiddleware.js`: Menangani proses unggahan file gambar/video. Di sinilah logika validasi ukuran file dan penyematan watermark otomatis dapat dilakukan untuk Perlindungan Karya Cipta.
- `RateLimitMiddleware.js`: Membatasi jumlah klik per detik untuk mencegah spam pada Formulir Kontak dan melindungi server dari serangan siber (bagian dari fitur Backup dan Keamanan).
+
+AuthMiddleware.js: Memastikan perlindungan halaman CMS, di mana hanya pengguna dengan token otentikasi valid yang bisa menambah atau menghapus data.
+
+UploadMiddleware.js: Menangani proses unggahan file gambar, video, logo, maupun dokumen PDF. Middleware ini disiapkan agar dapat menangani multi-direktori unggahan (folder terpisah untuk media project, logo institusi/perusahaan, dan file PDF CV), serta mendukung validasi ukuran file dan penyematan watermark otomatis untuk Perlindungan Karya Cipta.
+
+RateLimitMiddleware.js: Membatasi jumlah klik per detik untuk mencegah spam pada Formulir Kontak dan melindungi server dari serangan siber (bagian dari fitur backup dan keamanan).

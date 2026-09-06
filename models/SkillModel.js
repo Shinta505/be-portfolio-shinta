@@ -3,41 +3,43 @@ import db from "../config/database.js";
 
 const { DataTypes } = Sequelize;
 
-const UserModel = db.define('users', {
+/**
+ * Model SkillModel merepresentasikan tabel 'skills' di database Supabase PostgreSQL.
+ * Berfungsi untuk menyimpan data keahlian dan teknologi (seperti Frontend, Backend, Tools, Database) 
+ * yang ditampilkan pada halaman khusus skills dan teknologi[cite: 1].
+ */
+const SkillModel = db.define('skills', {
     uuid: {
         type: DataTypes.STRING,
         defaultValue: DataTypes.UUIDV4,
         allowNull: false,
+        primaryKey: true,
         validate: {
             notEmpty: true
         }
     },
-    username: {
+    name: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
         validate: {
             notEmpty: true,
-            len: [3, 100]
+            len: [1, 100]
         }
     },
-    password: {
+    category: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
             notEmpty: true
         }
     },
-    role: {
+    icon: {
         type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'admin',
-        validate: {
-            notEmpty: true
-        }
+        allowNull: true
     }
 }, {
-    freezeTableName: true
+    freezeTableName: true,
+    timestamps: true
 });
 
-export default UserModel;
+export default SkillModel;

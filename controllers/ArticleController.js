@@ -1,144 +1,235 @@
 import ArticleModel from "../models/ArticleModel.js";
-import slugify from "slugify";
+import path from "path";
+import fs from "fs";
 
-// 1. Mendapatkan semua artikel (bisa untuk publik atau admin)
+/**
+ * Mengambil semua data artikel atau blog[cite: 1].
+ * Mendukung filter berdasarkan status (draft/published) jika diperlukan.
+ */
 export const getArticles = async(req, res) => {
     try {
-        const response = await ArticleModel.findAll({
+        const { status } = req.query;
+        let condition = {};
+
+        if (status) {
+            condition.status = status;
+        }
+
+        const articles = await ArticleModel.findAll({
+            where: condition,
             order: [
-                ['createdAt', 'DESC']
+                ["createdAt", "DESC"]
             ]
         });
-        return res.status(200).json(response);
+
+        return res.status(200).json({
+            success: true,
+            message: "Berhasil mengambil data artikel.",
+            total: articles.length,
+            data: articles
+        });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("Error getArticles:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan internal pada server.",
+            error: error.message
+        });
     }
 };
 
-// 2. Mendapatkan detail artikel berdasarkan UUID
-export const getArticleById = async(req, res) => {
+/**
+ * Mengambil detail artikel berdasarkan UUID atau Slug.
+ */
+export const getArticleByIdOrSlug = async(req, res) => {
     try {
+        const { identifier } = req.params;
+
+        // Cek apakah identifier berupa UUID atau Slug
+        const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(identifier);
+
+        const query = isUuid ? { uuid: identifier } : { slug: identifier };
+
         const article = await ArticleModel.findOne({
-            where: {
-                uuid: req.params.id
-            }
+            where: query
         });
 
-        if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
+        if (!article) {
+            return res.status(404).json({
+                success: false,
+                message: "Artikel tidak ditemukan."
+            });
+        }
 
-        return res.status(200).json(article);
-    } catch (error) {
-        return res.status(500).json({ message: error.message });
-    }
-};
-
-// 3. Mendapatkan detail artikel berdasarkan Slug (untuk halaman baca blog)
-export const getArticleBySlug = async(req, res) => {
-    try {
-        const article = await ArticleModel.findOne({
-            where: {
-                slug: req.params.slug
-            }
+        return res.status(200).json({
+            success: true,
+            message: "Berhasil mengambil detail artikel.",
+            data: article
         });
-
-        if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
-
-        return res.status(200).json(article);
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("Error getArticleByIdOrSlug:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan internal pada server.",
+            error: error.message
+        });
     }
 };
 
-// 4. Membuat artikel baru (Fitur CMS Admin)
+/**
+ * Membuat artikel atau tulisan blog baru[cite: 1].
+ * Memerlukan hak akses admin yang divalidasi melalui middleware autentikasi.
+ */
 export const createArticle = async(req, res) => {
-    const { title, content, image, publishedAt } = req.body;
-
-    if (!title || !content) {
-        return res.status(400).json({ message: "Judul dan konten artikel wajib diisi" });
-    }
-
-    // Membuat slug otomatis dari judul, contoh: "Belajar Sequelize" -> "belajar-sequelize"
-    const generatedSlug = slugify(title, { lower: true, strict: true });
-
     try {
-        // Cek apakah slug sudah ada
-        const existingSlug = await ArticleModel.findOne({ where: { slug: generatedSlug } });
-        const finalSlug = existingSlug ? `${generatedSlug}-${Date.now()}` : generatedSlug;
+        const { title, slug, content, publishedAt, status } = req.body;
+        let imagePath = null;
+
+        if (req.file) {
+            imagePath = `/uploads/${req.file.filename}`;
+        }
+
+        // Validasi input manual tambahan jika diperlukan
+        if (!title || !slug || !content) {
+            return res.status(400).json({
+                success: false,
+                message: "Judul, slug, dan konten artikel wajib diisi."
+            });
+        }
+
+        // Cek ketersediaan slug agar tetap unik
+        const existingSlug = await ArticleModel.findOne({ where: { slug } });
+        if (existingSlug) {
+            return res.status(400).json({
+                success: false,
+                message: "Slug artikel sudah digunakan, silakan gunakan slug lain."
+            });
+        }
 
         const newArticle = await ArticleModel.create({
-            title: title,
-            slug: finalSlug,
-            content: content,
-            image: image || null,
-            publishedAt: publishedAt || null
+            title,
+            slug,
+            content,
+            image: imagePath,
+            publishedAt: publishedAt || new Date(),
+            status: status || "draft"
         });
 
         return res.status(201).json({
-            message: "Artikel berhasil dibuat",
+            success: true,
+            message: "Artikel berhasil dibuat.",
             data: newArticle
         });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("Error createArticle:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan internal pada server.",
+            error: error.message
+        });
     }
 };
 
-// 5. Mengubah artikel (Fitur CMS Admin)
+/**
+ * Memperbarui data artikel yang sudah ada berdasarkan UUID.
+ */
 export const updateArticle = async(req, res) => {
     try {
-        const article = await ArticleModel.findOne({
-            where: {
-                uuid: req.params.id
-            }
-        });
+        const { uuid } = req.params;
+        const { title, slug, content, publishedAt, status } = req.body;
 
-        if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
+        const article = await ArticleModel.findOne({ where: { uuid } });
 
-        const { title, content, image, publishedAt } = req.body;
-
-        let updatedSlug = article.slug;
-        if (title && title !== article.title) {
-            const baseSlug = slugify(title, { lower: true, strict: true });
-            const existingSlug = await ArticleModel.findOne({ where: { slug: baseSlug } });
-            updatedSlug = existingSlug && existingSlug.uuid !== article.uuid ? `${baseSlug}-${Date.now()}` : baseSlug;
+        if (!article) {
+            return res.status(404).json({
+                success: false,
+                message: "Artikel yang akan diperbarui tidak ditemukan."
+            });
         }
 
-        await ArticleModel.update({
-            title: title || article.title,
-            slug: updatedSlug,
-            content: content || article.content,
-            image: image !== undefined ? image : article.image,
-            publishedAt: publishedAt !== undefined ? publishedAt : article.publishedAt
-        }, {
-            where: {
-                uuid: req.params.id
+        // Jika slug diubah, pastikan slug baru belum dipakai artikel lain
+        if (slug && slug !== article.slug) {
+            const existingSlug = await ArticleModel.findOne({ where: { slug } });
+            if (existingSlug) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Slug artikel sudah digunakan oleh artikel lain."
+                });
             }
+        }
+
+        let imagePath = article.image;
+        if (req.file) {
+            // Hapus gambar lama jika ada file gambar baru yang diunggah
+            if (article.image) {
+                const oldImagePath = path.join("public", article.image);
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+            imagePath = `/uploads/${req.file.filename}`;
+        }
+
+        await article.update({
+            title: title || article.title,
+            slug: slug || article.slug,
+            content: content || article.content,
+            image: imagePath,
+            publishedAt: publishedAt || article.publishedAt,
+            status: status || article.status
         });
 
-        return res.status(200).json({ message: "Artikel berhasil diperbarui" });
+        return res.status(200).json({
+            success: true,
+            message: "Artikel berhasil diperbarui.",
+            data: article
+        });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("Error updateArticle:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan internal pada server.",
+            error: error.message
+        });
     }
 };
 
-// 6. Menghapus artikel (Fitur CMS Admin)
+/**
+ * Menghapus artikel berdasarkan UUID beserta file gambar sampul terkait.
+ */
 export const deleteArticle = async(req, res) => {
     try {
-        const article = await ArticleModel.findOne({
-            where: {
-                uuid: req.params.id
+        const { uuid } = req.params;
+
+        const article = await ArticleModel.findOne({ where: { uuid } });
+
+        if (!article) {
+            return res.status(404).json({
+                success: false,
+                message: "Artikel yang ingin dihapus tidak ditemukan."
+            });
+        }
+
+        // Hapus file gambar dari direktori lokal jika ada
+        if (article.image) {
+            const imagePath = path.join("public", article.image);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
             }
+        }
+
+        await article.destroy();
+
+        return res.status(200).json({
+            success: true,
+            message: "Artikel berhasil dihapus."
         });
-
-        if (!article) return res.status(404).json({ message: "Artikel tidak ditemukan" });
-
-        await ArticleModel.destroy({
-            where: {
-                uuid: req.params.id
-            }
-        });
-
-        return res.status(200).json({ message: "Artikel berhasil dihapus" });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("Error deleteArticle:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Terjadi kesalahan internal pada server.",
+            error: error.message
+        });
     }
 };

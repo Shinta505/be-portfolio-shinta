@@ -1,22 +1,49 @@
 import express from "express";
 import {
     getProjects,
-    getProjectByUuid,
+    getProjectByIdOrSlug,
     createProject,
     updateProject,
     deleteProject
 } from "../controllers/ProjectController.js";
-import { verifyToken } from "../middleware/AuthMiddleware.js";
+import { verifyToken, adminOnly } from "../middleware/AuthMiddleware.js";
+import upload from "../middleware/UploadMiddleware.js";
 
 const router = express.Router();
 
-// Endpoint publik (bisa diakses siapa saja untuk melihat galeri proyek)
-router.get('/projects', getProjects);
-router.get('/projects/:uuid', getProjectByUuid);
+/**
+ * @route   GET /api/projects
+ * @desc    Mengambil seluruh data projek/karya (mendukung filter kategori)
+ * @access  Public
+ */
+router.get("/projects", getProjects);
 
-// Endpoint privat (hanya bisa diakses oleh admin yang sudah login menggunakan token JWT)
-router.post('/projects', verifyToken, createProject);
-router.patch('/projects/:uuid', verifyToken, updateProject);
-router.delete('/projects/:uuid', verifyToken, deleteProject);
+/**
+ * @route   GET /api/projects/:identifier
+ * @desc    Mengambil detail satu projek berdasarkan UUID atau Slug
+ * @access  Public
+ */
+router.get("/projects/:identifier", getProjectByIdOrSlug);
+
+/**
+ * @route   POST /api/projects
+ * @desc    Menambahkan projek baru ke galeri karya
+ * @access  Private (Admin Only) + Upload File Gambar/Media
+ */
+router.post("/projects", verifyToken, adminOnly, upload.single("image"), createProject);
+
+/**
+ * @route   PUT /api/projects/:uuid
+ * @desc    Memperbarui data projek berdasarkan UUID
+ * @access  Private (Admin Only) + Upload File Gambar/Media Opsional
+ */
+router.put("/projects/:uuid", verifyToken, adminOnly, upload.single("image"), updateProject);
+
+/**
+ * @route   DELETE /api/projects/:uuid
+ * @desc    Menghapus projek dari database berdasarkan UUID
+ * @access  Private (Admin Only)
+ */
+router.delete("/projects/:uuid", verifyToken, adminOnly, deleteProject);
 
 export default router;

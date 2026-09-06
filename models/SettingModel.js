@@ -1,27 +1,38 @@
-import { Sequelize, DataTypes } from "sequelize";
+import { Sequelize } from "sequelize";
 import db from "../config/database.js";
 
+const { DataTypes } = Sequelize;
+
+/**
+ * Model SettingModel
+ * Menyimpan data pengaturan web yang mencakup konfigurasi Optimasi SEO (teks meta), 
+ * Kustomisasi Desain (kode warna/tema), serta pengaturan Dukungan Multi-Bahasa.
+ */
 const SettingModel = db.define('settings', {
-    id: {
-        type: DataTypes.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-    },
-    siteTitle: {
+    site_title: {
         type: DataTypes.STRING,
-        allowNull: true,
-        defaultValue: "Portofolio Saya"
+        allowNull: false,
+        defaultValue: "Portfolio Website"
     },
-    metaDescription: {
+    meta_description: {
         type: DataTypes.TEXT,
         allowNull: true
     },
-    themeColor: {
+    meta_keywords: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    theme_color: {
         type: DataTypes.STRING,
         allowNull: true,
-        defaultValue: "#3b82f6"
+        defaultValue: "#3b82f6" // Default Primary Hex Color
     },
-    maintenanceMode: {
+    language: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "id" // Dukungan Multi-Bahasa (e.g., 'id' atau 'en')
+    },
+    maintenance_mode: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false

@@ -1,83 +1,103 @@
-import Users from "../models/UserModel.js";
+import UserModel from "../models/UserModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-export const login = async(req, res) => {
+/**
+ * Controller Otentikasi untuk manajemen sesi masuk admin pada Sistem Manajemen Konten (CMS)[cite: 1].
+ */
+
+// Fungsi untuk proses login administrator
+export const Login = async(req, res) => {
+    const { username, password } = req.body;
+
     try {
-        const { username, password } = req.body;
-
-        // Mencari entitas pengguna berdasarkan username pada database
-        let user = await Users.findOne({
-            where: { username: username }
-        });
-
-        // Logika inisialisasi (seeding) otomatis admin via Environment Variables
-        if (!user && username === process.env.ADMIN_USERNAME) {
-            if (password === process.env.ADMIN_PASSWORD) {
-                const salt = await bcrypt.genSalt(10);
-                const hashPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
-
-                // Menyimpan data admin ke dalam tabel Users di Supabase
-                user = await Users.create({
-                    username: process.env.ADMIN_USERNAME,
-                    password: hashPassword,
-                    role: 'admin'
-                });
-            } else {
-                return res.status(400).json({ msg: "Kredensial kata sandi tidak valid." });
-            }
-        } else if (!user) {
-            return res.status(404).json({ msg: "Entitas pengguna tidak ditemukan di dalam sistem." });
+        // Validasi input kosong
+        if (!username || !password) {
+            return res.status(400).json({ message: "Username dan password wajib diisi." });
         }
 
-        // Verifikasi kecocokan hash sandi
-        const match = await bcrypt.compare(password, user.password);
-        if (!match) return res.status(400).json({ msg: "Kredensial kata sandi tidak valid." });
+        // Mencari data pengguna berdasarkan username pada database PostgreSQL melalui model Sequelize
+        const user = await UserModel.findOne({
+            where: { username }
+        });
 
-        // Pembuatan JSON Web Token (JWT) untuk manajemen sesi
-        const accessToken = jwt.sign({ id: user.id, username: user.username, role: user.role },
-            process.env.JWT_SECRET || 'secret_key_sementara', { expiresIn: '1d' }
+        if (!user) {
+            return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+        }
+
+        // Memeriksa kecocokan password yang diinput dengan enkripsi hash pada database
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            return res.status(400).json({ message: "Kredensial tidak valid (Password salah)." });
+        }
+
+        // Pembuatan JSON Web Token (JWT) untuk otorisasi sesi
+        const accessToken = jwt.sign({
+                uuid: user.uuid,
+                username: user.username,
+                role: user.role
+            },
+            process.env.JWT_SECRET, { expiresIn: "1d" }
         );
 
-        res.status(200).json({
-            msg: "Autentikasi berhasil.",
-            token: accessToken,
+        return res.status(200).json({
+            message: "Autentikasi berhasil.",
+            accessToken,
             data: {
-                id: user.id,
+                uuid: user.uuid,
                 username: user.username,
                 role: user.role
             }
         });
+
     } catch (error) {
-        res.status(500).json({ msg: `Kesalahan internal peladen: ${error.message}` });
-    }
-};
-
-export const me = async(req, res) => {
-    try {
-        const authHeader = req.headers['authorization'];
-        const token = authHeader && authHeader.split(' ')[1];
-
-        if (!token) return res.status(401).json({ msg: "Akses ditolak. Token tidak ditemukan." });
-
-        jwt.verify(token, process.env.JWT_SECRET || 'secret_key_sementara', async(err, decoded) => {
-            if (err) return res.status(403).json({ msg: "Token tidak valid atau telah kedaluwarsa." });
-
-            const user = await Users.findOne({
-                attributes: ['id', 'username', 'role'],
-                where: { id: decoded.id }
-            });
-
-            if (!user) return res.status(404).json({ msg: "Pengguna tidak ditemukan." });
-            res.status(200).json(user);
+        return res.status(500).json({
+            message: "Terjadi kesalahan pada server saat proses login.",
+            error: error.message
         });
-    } catch (error) {
-        res.status(500).json({ msg: error.message });
     }
 };
 
-export const logout = (req, res) => {
-    // Pada arsitektur berbasis JWT (stateless), proses logout umumnya diselesaikan 
-    // di sisi klien (frontend) dengan menghapus token dari local storage/cookies.
-    res.status(200).json({ msg: "Sesi berhasil diakhiri." });
+// Fungsi untuk mendapatkan informasi pengguna yang sedang aktif berdasarkan token
+export const Me = async(req, res) => {
+    try {
+        // req.userId atau req.user diasumsikan telah disematkan melalui middleware otentikasi (AuthMiddleware)
+        const userId = req.userId || (req.user && req.user.uuid);
+
+        if (!userId) {
+            return res.status(401).json({ message: "Mohon masuk ke akun Anda terlebih dahulu." });
+        }
+
+        const user = await UserModel.findOne({
+            attributes: ['uuid', 'username', 'role'],
+            where: { uuid: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: "Pengguna tidak ditemukan." });
+        }
+
+        return res.status(200).json(user);
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Gagal memuat data sesi pengguna.",
+            error: error.message
+        });
+    }
+};
+
+// Fungsi untuk menangani proses keluar (logout) sistem
+export const Logout = async(req, res) => {
+    try {
+        // Pada arsitektur stateless JWT, logout utama ditangani di sisi klien 
+        // dengan menghapus token dari penyimpanan lokal (LocalStorage/Cookies).
+        return res.status(200).json({ message: "Logout berhasil." });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: "Terjadi kesalahan saat proses logout.",
+            error: error.message
+        });
+    }
 };
