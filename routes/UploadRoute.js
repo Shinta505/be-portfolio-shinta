@@ -8,7 +8,7 @@ dotenv.config();
 
 const router = express.Router();
 
-// Konfigurasi Multer memory storage (file disimpan sementara di RAM, bukan di folder lokal Vercel)
+// Konfigurasi Multer memory storage
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // Batas maksimal 5MB
@@ -21,7 +21,7 @@ const upload = multer({
     }
 });
 
-// Inisialisasi Supabase Client menggunakan kredensial dari .env
+// Inisialisasi Supabase Client
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
 
 router.post("/upload", verifyToken, adminOnly, upload.single("image"), async(req, res) => {
@@ -32,8 +32,16 @@ router.post("/upload", verifyToken, adminOnly, upload.single("image"), async(req
 
         const file = req.file;
         const fileExt = file.originalname.split('.').pop();
-        const fileName = `profile-${Date.now()}-${Math.round(Math.random() * 1000)}.${fileExt}`;
-        const filePath = `${fileName}`;
+        
+        // Ambil nama folder dari req.body (opsional), default-kan ke 'profiles' jika kosong
+        const folderName = req.body.folder || 'profiles';
+        
+        // Sanitasi nama file agar aman dari spasi atau karakter khusus
+        const sanitizedOriginalName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const fileName = `file-${Date.now()}-${sanitizedOriginalName}`;
+        
+        // Gabungkan folder tujuan dengan nama file (Contoh: profiles/file-12345.jpg)
+        const filePath = `${folderName}/${fileName}`;
 
         // Unggah ke Bucket Supabase Storage (nama bucket: 'uploads')
         const { data, error } = await supabase.storage
@@ -54,7 +62,7 @@ router.post("/upload", verifyToken, adminOnly, upload.single("image"), async(req
 
         return res.status(200).json({
             success: true,
-            message: "Gambar berhasil diunggah ke Supabase.",
+            message: `File berhasil diunggah ke folder '${folderName}' di Supabase.`,
             url: publicURLData.publicUrl
         });
 
