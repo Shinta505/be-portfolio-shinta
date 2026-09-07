@@ -35,9 +35,9 @@ router.post("/upload", verifyToken, adminOnly, upload.single("image"), async(req
         const fileName = `profile-${Date.now()}-${Math.round(Math.random() * 1000)}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        // Unggah ke Bucket Supabase Storage (nama bucket: 'portfolio-images')
+        // Unggah ke Bucket Supabase Storage (nama bucket: 'uploads')
         const { data, error } = await supabase.storage
-            .from('portfolio-images')
+            .from('uploads')
             .upload(filePath, file.buffer, {
                 contentType: file.mimetype,
                 upsert: true
@@ -49,7 +49,7 @@ router.post("/upload", verifyToken, adminOnly, upload.single("image"), async(req
 
         // Ambil Public URL dari file yang baru diunggah
         const { data: publicURLData } = supabase.storage
-            .from('portfolio-images')
+            .from('uploads')
             .getPublicUrl(filePath);
 
         return res.status(200).json({
