@@ -65,7 +65,7 @@ export const updateProfile = async(req, res) => {
             const fileName = `profiles/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
             const { data, error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
-                .upload(`profiles/${fileName}`, req.file.buffer, {
+                .upload(fileName, req.file.buffer, {
                     contentType: req.file.mimetype,
                     upsert: false
                 });
@@ -75,7 +75,7 @@ export const updateProfile = async(req, res) => {
             // Ekstraksi Absolute URL dari Supabase
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
-                .getPublicUrl(`profiles/${fileName}`);
+                .getPublicUrl(fileName);
 
             imageUrl = publicUrlData.publicUrl;
         }
