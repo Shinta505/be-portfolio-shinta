@@ -62,7 +62,7 @@ export const updateProfile = async(req, res) => {
             }
 
             // Pengunggahan aliran data (buffer) profil baru
-            const fileName = `${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+            const fileName = `profiles/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
             const { data, error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
                 .upload(fileName, req.file.buffer, {
