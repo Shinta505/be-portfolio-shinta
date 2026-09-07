@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import path from "path";
 import bcrypt from 'bcrypt';
 import { fileURLToPath } from "url";
-import db from "./config/Database.js";
+import db from "./config/database.js";
 import UserModel from './models/UserModel.js';
 
 import AuthRoute from "./routes/AuthRoute.js";
