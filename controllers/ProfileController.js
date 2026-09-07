@@ -1,4 +1,4 @@
-import ProfileModel from "../models/ProfileModel.js";
+import ProfileModel from "../models/ProfileModel.js"; 
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
