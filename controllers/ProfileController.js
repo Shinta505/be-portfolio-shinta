@@ -50,7 +50,7 @@ export const updateProfile = async (req, res) => {
 
         let imageUrl = profile ? profile.profile_image : null;
 
-        // Logika integrasi unggahan berkas ke Supabase Storage (Disamakan dengan struktur Project)
+        // Logika integrasi unggahan berkas ke Supabase Storage
         if (req.file) {
             // Hapus file lama jika ada di Supabase
             if (profile && profile.profile_image && profile.profile_image.includes("supabase.co")) {
@@ -60,7 +60,7 @@ export const updateProfile = async (req, res) => {
                 }
             }
 
-            // Simpan langsung di dalam folder profiles/ atau di root bucket
+            // Sanitasi nama file dan pastikan awalan direktori 'profiles/' tertulis eksplisit
             const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
             const fileName = `profiles/profile-${Date.now()}-${sanitizedName}`;
 
@@ -78,7 +78,7 @@ export const updateProfile = async (req, res) => {
                 });
             }
 
-            // Ambil Public URL
+            // Ambil Public URL dari Supabase
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
                 .getPublicUrl(fileName);
