@@ -1,4 +1,13 @@
 import CertificationModel from "../models/CertificationModel.js";
+import { createClient } from "@supabase/supabase-js";
+
+// Inisialisasi Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Menggunakan single-bucket "uploads" dengan folder spesifik
+const BUCKET_NAME = "uploads";
 
 /**
  * Mengambil seluruh data sertifikasi dan lisensi profesional.
@@ -54,21 +63,41 @@ export const getCertificationById = async(req, res) => {
 };
 
 /**
- * Menambahkan data sertifikasi atau lisensi baru ke database.
+ * Menambahkan data sertifikasi atau lisensi baru ke database beserta unggah media ke Supabase.
  */
 export const createCertification = async(req, res) => {
-    const {
-        name,
-        issuer,
-        issueDate,
-        expirationDate,
-        credentialId,
-        credentialUrl,
-        skills,
-        media
-    } = req.body;
-
     try {
+        const {
+            name,
+            issuer,
+            issueDate,
+            expirationDate,
+            credentialId,
+            credentialUrl,
+            skills
+        } = req.body;
+
+        let mediaUrl = null;
+
+        if (req.file) {
+            const fileName = `certifications/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah media: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+
+            mediaUrl = publicUrlData.publicUrl;
+        }
+
         await CertificationModel.create({
             name,
             issuer,
@@ -77,7 +106,7 @@ export const createCertification = async(req, res) => {
             credentialId,
             credentialUrl,
             skills,
-            media
+            media: mediaUrl
         });
 
         res.status(201).json({
@@ -115,9 +144,36 @@ export const updateCertification = async(req, res) => {
             expirationDate,
             credentialId,
             credentialUrl,
-            skills,
-            media
+            skills
         } = req.body;
+
+        let mediaUrl = certification.media;
+
+        if (req.file) {
+            // Hapus file lama di Supabase jika ada
+            if (certification.media && certification.media.includes("supabase.co")) {
+                const oldFilePath = certification.media.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+                if (oldFilePath) {
+                    await supabase.storage.from(BUCKET_NAME).remove([oldFilePath]);
+                }
+            }
+
+            const fileName = `certifications/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah media baru: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+
+            mediaUrl = publicUrlData.publicUrl;
+        }
 
         await CertificationModel.update({
             name: name !== undefined ? name : certification.name,
@@ -127,7 +183,7 @@ export const updateCertification = async(req, res) => {
             credentialId: credentialId !== undefined ? credentialId : certification.credentialId,
             credentialUrl: credentialUrl !== undefined ? credentialUrl : certification.credentialUrl,
             skills: skills !== undefined ? skills : certification.skills,
-            media: media !== undefined ? media : certification.media
+            media: mediaUrl
         }, {
             where: {
                 uuid: req.params.id
@@ -160,6 +216,14 @@ export const deleteCertification = async(req, res) => {
             return res.status(404).json({
                 message: "Data sertifikasi tidak ditemukan."
             });
+        }
+
+        // Hapus file fisik dari Supabase Storage
+        if (certification.media && certification.media.includes("supabase.co")) {
+            const imagePath = certification.media.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+            if (imagePath) {
+                await supabase.storage.from(BUCKET_NAME).remove([imagePath]);
+            }
         }
 
         await CertificationModel.destroy({

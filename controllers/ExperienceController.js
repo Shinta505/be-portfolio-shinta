@@ -1,4 +1,11 @@
 import ExperienceModel from "../models/ExperienceModel.js";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const BUCKET_NAME = "uploads";
 
 /**
  * Mendapatkan seluruh data riwayat pekerjaan.
@@ -38,23 +45,43 @@ export const getExperienceById = async(req, res) => {
 };
 
 /**
- * Menambahkan data riwayat pekerjaan baru (hanya admin).
+ * Menambahkan data riwayat pekerjaan baru dengan dukungan upload media ke Supabase.
  */
 export const createExperience = async(req, res) => {
-    const {
-        position,
-        company,
-        location,
-        location_type,
-        employment_type,
-        start_date,
-        end_date,
-        description,
-        skills,
-        media
-    } = req.body;
-
     try {
+        const {
+            position,
+            company,
+            location,
+            location_type,
+            employment_type,
+            start_date,
+            end_date,
+            description,
+            skills
+        } = req.body;
+
+        let mediaUrl = req.body.media || null;
+
+        if (req.file) {
+            const fileName = `experiences/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah media: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+
+            mediaUrl = publicUrlData.publicUrl;
+        }
+
         await ExperienceModel.create({
             position,
             company,
@@ -65,7 +92,7 @@ export const createExperience = async(req, res) => {
             end_date,
             description,
             skills,
-            media
+            media: mediaUrl
         });
 
         return res.status(201).json({ message: "Data pengalaman kerja berhasil ditambahkan." });
@@ -75,7 +102,7 @@ export const createExperience = async(req, res) => {
 };
 
 /**
- * Memperbarui data riwayat pekerjaan berdasarkan UUID (hanya admin).
+ * Memperbarui data riwayat pekerjaan berdasarkan UUID.
  */
 export const updateExperience = async(req, res) => {
     try {
@@ -98,9 +125,38 @@ export const updateExperience = async(req, res) => {
             start_date,
             end_date,
             description,
-            skills,
-            media
+            skills
         } = req.body;
+
+        let mediaUrl = experience.media;
+
+        if (req.file) {
+            // Hapus file lama di Supabase jika ada dan menggunakan supabase URL
+            if (experience.media && experience.media.includes("supabase.co")) {
+                const oldFilePath = experience.media.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+                if (oldFilePath) {
+                    await supabase.storage.from(BUCKET_NAME).remove([oldFilePath]);
+                }
+            }
+
+            const fileName = `experiences/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah media baru: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+
+            mediaUrl = publicUrlData.publicUrl;
+        } else if (req.body.media !== undefined) {
+            mediaUrl = req.body.media;
+        }
 
         await ExperienceModel.update({
             position,
@@ -112,7 +168,7 @@ export const updateExperience = async(req, res) => {
             end_date,
             description,
             skills,
-            media
+            media: mediaUrl
         }, {
             where: {
                 uuid: req.params.id
@@ -126,7 +182,7 @@ export const updateExperience = async(req, res) => {
 };
 
 /**
- * Menghapus data riwayat pekerjaan berdasarkan UUID (hanya admin).
+ * Menghapus data riwayat pekerjaan berdasarkan UUID.
  */
 export const deleteExperience = async(req, res) => {
     try {
@@ -138,6 +194,13 @@ export const deleteExperience = async(req, res) => {
 
         if (!experience) {
             return res.status(404).json({ message: "Data pengalaman kerja tidak ditemukan." });
+        }
+
+        if (experience.media && experience.media.includes("supabase.co")) {
+            const imagePath = experience.media.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+            if (imagePath) {
+                await supabase.storage.from(BUCKET_NAME).remove([imagePath]);
+            }
         }
 
         await ExperienceModel.destroy({

@@ -1,19 +1,23 @@
 import ArticleModel from "../models/ArticleModel.js";
-import path from "path";
-import fs from "fs";
+import { createClient } from "@supabase/supabase-js";
+
+// Inisialisasi Supabase Client
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Konstanta nama bucket untuk artikel
+const BUCKET_NAME = "uploads";
 
 /**
- * Mengambil semua data artikel atau blog[cite: 1].
- * Mendukung filter berdasarkan status (draft/published) jika diperlukan.
+ * Mengambil semua data artikel atau blog.
  */
 export const getArticles = async(req, res) => {
     try {
         const { status } = req.query;
         let condition = {};
 
-        if (status) {
-            condition.status = status;
-        }
+        if (status) condition.status = status;
 
         const articles = await ArticleModel.findAll({
             where: condition,
@@ -29,7 +33,6 @@ export const getArticles = async(req, res) => {
             data: articles
         });
     } catch (error) {
-        console.error("Error getArticles:", error);
         return res.status(500).json({
             success: false,
             message: "Terjadi kesalahan internal pada server.",
@@ -44,14 +47,10 @@ export const getArticles = async(req, res) => {
 export const getArticleByIdOrSlug = async(req, res) => {
     try {
         const { identifier } = req.params;
-
-        // Cek apakah identifier berupa UUID atau Slug
         const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(identifier);
 
-        const query = isUuid ? { uuid: identifier } : { slug: identifier };
-
         const article = await ArticleModel.findOne({
-            where: query
+            where: isUuid ? { uuid: identifier } : { slug: identifier }
         });
 
         if (!article) {
@@ -67,7 +66,6 @@ export const getArticleByIdOrSlug = async(req, res) => {
             data: article
         });
     } catch (error) {
-        console.error("Error getArticleByIdOrSlug:", error);
         return res.status(500).json({
             success: false,
             message: "Terjadi kesalahan internal pada server.",
@@ -77,19 +75,12 @@ export const getArticleByIdOrSlug = async(req, res) => {
 };
 
 /**
- * Membuat artikel atau tulisan blog baru[cite: 1].
- * Memerlukan hak akses admin yang divalidasi melalui middleware autentikasi.
+ * Membuat artikel atau tulisan blog baru ke database dan Supabase Storage.
  */
 export const createArticle = async(req, res) => {
     try {
         const { title, slug, content, publishedAt, status } = req.body;
-        let imagePath = null;
 
-        if (req.file) {
-            imagePath = `/uploads/${req.file.filename}`;
-        }
-
-        // Validasi input manual tambahan jika diperlukan
         if (!title || !slug || !content) {
             return res.status(400).json({
                 success: false,
@@ -97,7 +88,6 @@ export const createArticle = async(req, res) => {
             });
         }
 
-        // Cek ketersediaan slug agar tetap unik
         const existingSlug = await ArticleModel.findOne({ where: { slug } });
         if (existingSlug) {
             return res.status(400).json({
@@ -106,11 +96,33 @@ export const createArticle = async(req, res) => {
             });
         }
 
+        let imageUrl = null;
+
+        // Eksekusi unggahan buffer ke Supabase Storage
+        if (req.file) {
+            const fileName = `articles/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(`articles/${fileName}`, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah gambar: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(`articles/${fileName}`);
+
+            imageUrl = publicUrlData.publicUrl;
+        }
+
         const newArticle = await ArticleModel.create({
             title,
             slug,
             content,
-            image: imagePath,
+            image: imageUrl,
             publishedAt: publishedAt || new Date(),
             status: status || "draft"
         });
@@ -121,7 +133,6 @@ export const createArticle = async(req, res) => {
             data: newArticle
         });
     } catch (error) {
-        console.error("Error createArticle:", error);
         return res.status(500).json({
             success: false,
             message: "Terjadi kesalahan internal pada server.",
@@ -131,7 +142,7 @@ export const createArticle = async(req, res) => {
 };
 
 /**
- * Memperbarui data artikel yang sudah ada berdasarkan UUID.
+ * Memperbarui data artikel dan sinkronisasi berkas media pada Supabase.
  */
 export const updateArticle = async(req, res) => {
     try {
@@ -147,7 +158,6 @@ export const updateArticle = async(req, res) => {
             });
         }
 
-        // Jika slug diubah, pastikan slug baru belum dipakai artikel lain
         if (slug && slug !== article.slug) {
             const existingSlug = await ArticleModel.findOne({ where: { slug } });
             if (existingSlug) {
@@ -158,23 +168,42 @@ export const updateArticle = async(req, res) => {
             }
         }
 
-        let imagePath = article.image;
+        let imageUrl = article.image;
+
         if (req.file) {
-            // Hapus gambar lama jika ada file gambar baru yang diunggah
-            if (article.image) {
-                const oldImagePath = path.join("public", article.image);
-                if (fs.existsSync(oldImagePath)) {
-                    fs.unlinkSync(oldImagePath);
+            // Evaluasi dan penghapusan objek lama dari arsitektur storage
+            if (article.image && article.image.includes("supabase.co")) {
+                const oldFilePath = article.image.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+                if (oldFilePath) {
+                    await supabase.storage.from(BUCKET_NAME).remove([oldFilePath]);
                 }
             }
-            imagePath = `/uploads/${req.file.filename}`;
+
+            // Unggah buffer objek baru
+            const fileName = `articles/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+            const { error: uploadError } = await supabase.storage
+                .from(
+                    BUCKET_NAME
+                )
+                .upload(`articles/${fileName}`, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah gambar baru: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(`articles/${fileName}`);
+
+            imageUrl = publicUrlData.publicUrl;
         }
 
         await article.update({
             title: title || article.title,
             slug: slug || article.slug,
             content: content || article.content,
-            image: imagePath,
+            image: imageUrl,
             publishedAt: publishedAt || article.publishedAt,
             status: status || article.status
         });
@@ -185,7 +214,6 @@ export const updateArticle = async(req, res) => {
             data: article
         });
     } catch (error) {
-        console.error("Error updateArticle:", error);
         return res.status(500).json({
             success: false,
             message: "Terjadi kesalahan internal pada server.",
@@ -195,12 +223,11 @@ export const updateArticle = async(req, res) => {
 };
 
 /**
- * Menghapus artikel berdasarkan UUID beserta file gambar sampul terkait.
+ * Menghapus artikel beserta objek gambar persisten terkait.
  */
 export const deleteArticle = async(req, res) => {
     try {
         const { uuid } = req.params;
-
         const article = await ArticleModel.findOne({ where: { uuid } });
 
         if (!article) {
@@ -210,11 +237,11 @@ export const deleteArticle = async(req, res) => {
             });
         }
 
-        // Hapus file gambar dari direktori lokal jika ada
-        if (article.image) {
-            const imagePath = path.join("public", article.image);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
+        // Transmisi instruksi penghapusan objek ke Supabase API
+        if (article.image && article.image.includes("supabase.co")) {
+            const imagePath = article.image.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+            if (imagePath) {
+                await supabase.storage.from(BUCKET_NAME).remove([imagePath]);
             }
         }
 
@@ -225,7 +252,6 @@ export const deleteArticle = async(req, res) => {
             message: "Artikel berhasil dihapus."
         });
     } catch (error) {
-        console.error("Error deleteArticle:", error);
         return res.status(500).json({
             success: false,
             message: "Terjadi kesalahan internal pada server.",

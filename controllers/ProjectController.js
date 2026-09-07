@@ -1,6 +1,13 @@
 import ProjectModel from "../models/ProjectModel.js";
-import path from "path";
-import fs from "fs";
+import { createClient } from "@supabase/supabase-js";
+
+// Inisialisasi Supabase Client menggunakan kredensial dari environment variables
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Konstanta nama bucket pada Supabase Storage
+const BUCKET_NAME = "uploads";
 
 /**
  * Mengambil seluruh data projek/karya dari database (mendukung filter kategori jika ada).
@@ -43,7 +50,6 @@ export const getProjectByIdOrSlug = async(req, res) => {
     try {
         const { identifier } = req.params;
 
-        // Cek apakah identifier berupa UUID atau Slug
         const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(identifier);
 
         const project = await ProjectModel.findOne({
@@ -72,7 +78,7 @@ export const getProjectByIdOrSlug = async(req, res) => {
 };
 
 /**
- * Menambahkan projek baru ke dalam galeri karya (Membutuhkan hak akses admin).
+ * Menambahkan projek baru ke dalam galeri karya dan mengunggah gambar ke Supabase Storage.
  */
 export const createProject = async(req, res) => {
     try {
@@ -85,13 +91,11 @@ export const createProject = async(req, res) => {
             });
         }
 
-        // Membuat slug otomatis dari title
         const slug = title
             .toLowerCase()
             .replace(/[^a-z0-9 ]/g, "")
             .replace(/\s+/g, "-");
 
-        // Cek apakah slug sudah ada
         const existingProject = await ProjectModel.findOne({ where: { slug } });
         if (existingProject) {
             return res.status(400).json({
@@ -100,10 +104,27 @@ export const createProject = async(req, res) => {
             });
         }
 
-        // Menangani file gambar jika diunggah melalui middleware multer
-        let imageFilename = null;
+        let imageUrl = null;
+
+        // Logika pengunggahan buffer ke Supabase Storage
         if (req.file) {
-            imageFilename = req.file.filename;
+            const fileName = `projects/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+
+            const { data, error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(`projects/${fileName}`, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah gambar: ${uploadError.message}`);
+
+            // Ekstraksi URL publik dari berkas yang diunggah
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(`projects/${fileName}`);
+
+            imageUrl = publicUrlData.publicUrl;
         }
 
         const newProject = await ProjectModel.create({
@@ -112,7 +133,7 @@ export const createProject = async(req, res) => {
             category,
             description,
             tools,
-            image: imageFilename,
+            image: imageUrl,
             github_url: github_url || null,
             figma_url: figma_url || null,
             website_url: website_url || null,
@@ -133,7 +154,7 @@ export const createProject = async(req, res) => {
 };
 
 /**
- * Memperbarui data projek yang sudah ada berdasarkan UUID.
+ * Memperbarui data projek dan menimpa file gambar di Supabase Storage jika terdapat pembaruan file.
  */
 export const updateProject = async(req, res) => {
     try {
@@ -157,16 +178,33 @@ export const updateProject = async(req, res) => {
                 .replace(/\s+/g, "-");
         }
 
-        let imageFilename = project.image;
+        let imageUrl = project.image;
+
         if (req.file) {
-            // Hapus gambar lama jika ada file baru yang diunggah
-            if (project.image) {
-                const oldImagePath = path.join("public/uploads/projects", project.image);
-                if (fs.existsSync(oldImagePath)) {
-                    fs.unlinkSync(oldImagePath);
+            // Evaluasi dan penghapusan berkas lama pada Supabase Storage
+            if (project.image && project.image.includes("supabase.co")) {
+                const oldFilePath = project.image.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+                if (oldFilePath) {
+                    await supabase.storage.from(BUCKET_NAME).remove([oldFilePath]);
                 }
             }
-            imageFilename = req.file.filename;
+
+            // Pengunggahan berkas baru
+            const fileName = `projects/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
+            const { data, error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Gagal mengunggah gambar baru: ${uploadError.message}`);
+
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(fileName);
+
+            imageUrl = publicUrlData.publicUrl;
         }
 
         await ProjectModel.update({
@@ -175,7 +213,7 @@ export const updateProject = async(req, res) => {
             category: category || project.category,
             description: description || project.description,
             tools: tools || project.tools,
-            image: imageFilename,
+            image: imageUrl,
             github_url: github_url !== undefined ? github_url : project.github_url,
             figma_url: figma_url !== undefined ? figma_url : project.figma_url,
             website_url: website_url !== undefined ? website_url : project.website_url,
@@ -198,7 +236,7 @@ export const updateProject = async(req, res) => {
 };
 
 /**
- * Menghapus projek dari database berdasarkan UUID.
+ * Menghapus projek dari database dan menghilangkan berkas gambar fisik terkait dari Supabase Storage.
  */
 export const deleteProject = async(req, res) => {
     try {
@@ -212,11 +250,15 @@ export const deleteProject = async(req, res) => {
             });
         }
 
-        // Hapus file gambar fisik terkait jika ada
-        if (project.image) {
-            const imagePath = path.join("public/uploads/projects", project.image);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
+        // Proses delegasi penghapusan objek berkas dari infrastruktur Supabase
+        if (project.image && project.image.includes("supabase.co")) {
+            const imagePath = project.image.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
+            if (imagePath) {
+                const { error: removeError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .remove([imagePath]);
+
+                if (removeError) console.error("Gagal menghapus gambar dari Supabase:", removeError);
             }
         }
 

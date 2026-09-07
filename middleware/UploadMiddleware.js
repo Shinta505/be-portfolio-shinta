@@ -1,19 +1,11 @@
 import multer from "multer";
 import path from "path";
 
-// Konfigurasi penyimpanan sementara atau direktori lokal
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Pastikan folder 'public/uploads' sudah tersedia di root direktori backend
-        cb(null, "public/uploads/");
-    },
-    filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
-    }
-});
+// Menggunakan memoryStorage untuk menyimpan file sementara sebagai buffer di dalam memori utama (RAM).
+// Pendekatan ini merupakan standar untuk arsitektur serverless guna menghindari error ENOENT pada file system yang bersifat ephemeral.
+const storage = multer.memoryStorage();
 
-// Validasi tipe file (hanya mengizinkan gambar atau video tertentu)
+// Validasi ekstensi dan tipe MIME file
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp|mp4|mkv/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -26,11 +18,11 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Eksekusi konfigurasi Multer
+// Instansiasi middleware Multer
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 10 * 1024 * 1024 // Batas ukuran maksimal file 10MB
+        fileSize: 10 * 1024 * 1024 // Batas alokasi buffer maksimal 10MB per file
     },
     fileFilter: fileFilter
 });
