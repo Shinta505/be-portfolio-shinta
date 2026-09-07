@@ -104,7 +104,7 @@ export const createArticle = async(req, res) => {
 
             const { error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
-                .upload(`articles/${fileName}`, req.file.buffer, {
+                .upload(fileName, req.file.buffer, {
                     contentType: req.file.mimetype,
                     upsert: false
                 });
@@ -113,7 +113,7 @@ export const createArticle = async(req, res) => {
 
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
-                .getPublicUrl(`articles/${fileName}`);
+                .getPublicUrl(fileName);
 
             imageUrl = publicUrlData.publicUrl;
         }
@@ -185,7 +185,7 @@ export const updateArticle = async(req, res) => {
                 .from(
                     BUCKET_NAME
                 )
-                .upload(`articles/${fileName}`, req.file.buffer, {
+                .upload(fileName, req.file.buffer, {
                     contentType: req.file.mimetype,
                     upsert: false
                 });
@@ -194,7 +194,7 @@ export const updateArticle = async(req, res) => {
 
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
-                .getPublicUrl(`articles/${fileName}`);
+                .getPublicUrl(fileName);
 
             imageUrl = publicUrlData.publicUrl;
         }
