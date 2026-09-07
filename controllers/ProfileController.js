@@ -7,8 +7,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const BUCKET_NAME = "uploads";
 
-// Mengambil data profil (karena ini portofolio pribadi, biasanya hanya ada satu record data profil)
-export const getProfile = async(req, res) => {
+// Mengambil data profil
+export const getProfile = async (req, res) => {
     try {
         const profile = await ProfileModel.findOne();
         if (!profile) {
@@ -30,8 +30,8 @@ export const getProfile = async(req, res) => {
     }
 };
 
-// Memperbarui atau membuat data profil baru jika belum ada
-export const updateProfile = async(req, res) => {
+// Memperbarui atau membuat data profil baru
+export const updateProfile = async (req, res) => {
     try {
         let profile = await ProfileModel.findOne();
 
@@ -48,12 +48,11 @@ export const updateProfile = async(req, res) => {
             twitter_url
         } = req.body;
 
-        // Mengambil profil_image dari body (jika tidak ada file yang diunggah) atau null
-        let imageUrl = profile ? profile.profile_image : (req.body.profile_image || null);
+        let imageUrl = profile ? profile.profile_image : null;
 
-        // Logika integrasi unggahan berkas ke Supabase Storage
+        // Logika integrasi unggahan berkas ke Supabase Storage (Disamakan dengan struktur Project)
         if (req.file) {
-            // Evaluasi dan penghapusan berkas lama pada object storage jika profil sudah eksis
+            // Hapus file lama jika ada di Supabase
             if (profile && profile.profile_image && profile.profile_image.includes("supabase.co")) {
                 const oldFilePath = profile.profile_image.split(`/storage/v1/object/public/${BUCKET_NAME}/`)[1];
                 if (oldFilePath) {
@@ -61,18 +60,25 @@ export const updateProfile = async(req, res) => {
                 }
             }
 
-            // Pengunggahan aliran data (buffer) profil baru
-            const fileName = `profiles/${Date.now()}-${req.file.originalname.replace(/\s+/g, "-")}`;
-            const { data, error: uploadError } = await supabase.storage
+            // Simpan langsung di dalam folder profiles/ atau di root bucket
+            const sanitizedName = req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, "_");
+            const fileName = `profiles/profile-${Date.now()}-${sanitizedName}`;
+
+            const { error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
                 .upload(fileName, req.file.buffer, {
                     contentType: req.file.mimetype,
                     upsert: false
                 });
 
-            if (uploadError) throw new Error(`Gagal mengunggah foto profil: ${uploadError.message}`);
+            if (uploadError) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Gagal mengunggah foto profil: ${uploadError.message}`
+                });
+            }
 
-            // Ekstraksi Absolute URL dari Supabase
+            // Ambil Public URL
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
                 .getPublicUrl(fileName);
@@ -81,7 +87,6 @@ export const updateProfile = async(req, res) => {
         }
 
         if (!profile) {
-            // Jika entitas profil belum eksis, lakukan operasi insersi (Create)
             const newProfile = await ProfileModel.create({
                 fullname,
                 headline,
@@ -103,7 +108,7 @@ export const updateProfile = async(req, res) => {
             });
         }
 
-        // Jika entitas profil telah eksis, lakukan operasi pembaruan (Update)
+        // Update database
         await ProfileModel.update({
             fullname: fullname || profile.fullname,
             headline: headline || profile.headline,
