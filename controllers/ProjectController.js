@@ -112,7 +112,7 @@ export const createProject = async(req, res) => {
 
             const { data, error: uploadError } = await supabase.storage
                 .from(BUCKET_NAME)
-                .upload(`projects/${fileName}`, req.file.buffer, {
+                .upload(fileName, req.file.buffer, {
                     contentType: req.file.mimetype,
                     upsert: false
                 });
@@ -122,7 +122,7 @@ export const createProject = async(req, res) => {
             // Ekstraksi URL publik dari berkas yang diunggah
             const { data: publicUrlData } = supabase.storage
                 .from(BUCKET_NAME)
-                .getPublicUrl(`projects/${fileName}`);
+                .getPublicUrl(fileName);
 
             imageUrl = publicUrlData.publicUrl;
         }
